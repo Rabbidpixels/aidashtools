@@ -4,13 +4,14 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { LogOut, LayoutDashboard, FolderKanban, Wrench, Megaphone, BarChart3 } from 'lucide-react'
+import { LogOut, LayoutDashboard, FolderKanban, Wrench, Megaphone, BarChart3, Settings } from 'lucide-react'
 
 const navItems = [
   { href: '/admin/categories', label: 'Categories', icon: FolderKanban },
   { href: '/admin/tools', label: 'Tools', icon: Wrench },
   { href: '/admin/ads', label: 'Ads', icon: Megaphone },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function AdminLayout({

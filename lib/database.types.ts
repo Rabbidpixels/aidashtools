@@ -15,7 +15,7 @@ export interface Tool {
   description: string | null;
   link: string | null;
   featured: boolean;
-  display_order: number;
+  display_order?: number; // Optional until migration is run
   created_at: string;
 }
 
@@ -31,6 +31,14 @@ export interface ToolClick {
   id: string;
   tool_id: string;
   clicked_at: string;
+}
+
+export interface Setting {
+  id: string;
+  key: string;
+  value: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // Database schema type
@@ -56,6 +64,11 @@ export interface Database {
         Row: ToolClick;
         Insert: Omit<ToolClick, 'id' | 'clicked_at'>;
         Update: Partial<Omit<ToolClick, 'id' | 'clicked_at'>>;
+      };
+      settings: {
+        Row: Setting;
+        Insert: Omit<Setting, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Setting, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };

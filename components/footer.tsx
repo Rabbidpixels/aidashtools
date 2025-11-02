@@ -1,5 +1,23 @@
-export function Footer() {
+import { supabaseAdmin } from '@/lib/supabase'
+
+export async function Footer() {
   const currentYear = new Date().getFullYear()
+
+  // Fetch footer settings
+  const { data: settings } = await supabaseAdmin
+    .from('settings')
+    .select('*')
+    .in('key', ['footer_copyright', 'footer_disclosure', 'footer_tiktok_url', 'footer_facebook_url'])
+
+  const settingsMap: Record<string, string> = {}
+  settings?.forEach((setting: any) => {
+    settingsMap[setting.key] = setting.value || ''
+  })
+
+  const copyright = settingsMap.footer_copyright || `© ${currentYear} AI Dashboard. Site created by RabbidPixelsLLC. All rights reserved.`
+  const disclosure = settingsMap.footer_disclosure || 'Some links on this website are affiliate links. This means we may earn a commission if you click on the link and make a purchase, at no additional cost to you.'
+  const tiktokUrl = settingsMap.footer_tiktok_url || 'https://www.tiktok.com/@YOUR_TIKTOK_USERNAME'
+  const facebookUrl = settingsMap.footer_facebook_url || 'https://www.facebook.com/YOUR_FACEBOOK_PAGE'
 
   return (
     <footer className="bg-card border-t border-border py-10">
@@ -8,7 +26,7 @@ export function Footer() {
           {/* Social Links */}
           <div className="flex justify-center items-center gap-5 mb-6 flex-wrap">
             <a
-              href="https://www.tiktok.com/@YOUR_TIKTOK_USERNAME"
+              href={tiktokUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-foreground font-semibold px-5 py-2.5 bg-secondary border-2 border-border rounded-full transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary hover:-translate-y-0.5"
@@ -19,7 +37,7 @@ export function Footer() {
               <span>TikTok</span>
             </a>
             <a
-              href="https://www.facebook.com/YOUR_FACEBOOK_PAGE"
+              href={facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-foreground font-semibold px-5 py-2.5 bg-secondary border-2 border-border rounded-full transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary hover:-translate-y-0.5"
@@ -56,12 +74,12 @@ export function Footer() {
 
           {/* Disclosure */}
           <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-            <strong>Disclosure:</strong> Some links on this website are affiliate links. This means we may earn a commission if you click on the link and make a purchase, at no additional cost to you. We only recommend products and services that we believe will add value to our readers. Your support helps us maintain this free resource.
+            <strong>Disclosure:</strong> {disclosure}
           </p>
 
           {/* Copyright */}
           <p className="text-sm font-semibold text-muted-foreground">
-            © {currentYear} AI Dashboard. Site created by <strong>RabbidPixelsLLC</strong>. All rights reserved.
+            {copyright}
           </p>
         </div>
       </div>

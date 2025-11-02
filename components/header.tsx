@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
 
-export function Header() {
+interface HeaderProps {
+  showAdminLink?: boolean
+}
+
+export function Header({ showAdminLink = false }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 py-5">
@@ -12,12 +16,14 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Link
-              href="/login"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Admin
-            </Link>
+            {showAdminLink && (
+              <Link
+                href="/login"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Admin
+              </Link>
+            )}
           </div>
         </div>
       </div>

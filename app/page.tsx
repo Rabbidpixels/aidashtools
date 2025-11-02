@@ -19,25 +19,38 @@ export default async function Home() {
     .select('*')
     .order('name')
 
-  // Fetch all tools - featured first, then by display order
+  // Fetch all tools - featured first, then by name
   const { data: allTools } = await supabaseAdmin
     .from('tools')
     .select('*')
     .order('featured', { ascending: false })
-    .order('display_order', { ascending: true })
     .order('name', { ascending: true })
 
   // Type cast the fetched data
   const typedCategories = (categories || []) as Category[]
   const typedAllTools = (allTools || []) as Tool[]
 
-  // Group tools by category (already sorted: featured first, then by display_order)
+  // Group tools by category and sort
   const toolsByCategory: Record<string, Tool[]> = {}
   typedAllTools.forEach((tool) => {
     if (!toolsByCategory[tool.category_id]) {
       toolsByCategory[tool.category_id] = []
     }
     toolsByCategory[tool.category_id].push(tool)
+  })
+
+  // Sort each category's tools by display_order if available
+  Object.keys(toolsByCategory).forEach(categoryId => {
+    toolsByCategory[categoryId].sort((a, b) => {
+      // Featured first
+      if (a.featured !== b.featured) return a.featured ? -1 : 1
+      // Then by display_order if both have it
+      if (a.display_order !== undefined && b.display_order !== undefined) {
+        return a.display_order - b.display_order
+      }
+      // Then by name
+      return a.name.localeCompare(b.name)
+    })
   })
 
   return (
