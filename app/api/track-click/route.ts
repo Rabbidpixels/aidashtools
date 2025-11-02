@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     // Insert click record
     const { error } = await supabaseAdmin
       .from('tool_clicks')
+      // @ts-expect-error - Type issue with Supabase client
       .insert({ tool_id: toolId })
 
     if (error) {
