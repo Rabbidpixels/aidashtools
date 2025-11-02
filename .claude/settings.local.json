@@ -17,7 +17,9 @@
       "WebFetch(domain:aidashtools.com)",
       "Bash(curl:*)",
       "Bash(aidashtools_page.html)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 10 bash:*)"
     ],
     "deny": [],
     "ask": []

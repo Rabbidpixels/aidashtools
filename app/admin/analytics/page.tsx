@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import type { Tool } from '@/lib/database.types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -25,13 +25,13 @@ export default function AnalyticsPage() {
     setLoading(true)
 
     // Fetch all tools
-    const { data: tools } = await supabaseAdmin
+    const { data: tools } = await createClient()
       .from('tools')
       .select('*')
       .order('name')
 
     // Fetch all clicks grouped by tool_id
-    const { data: clicks } = await supabaseAdmin
+    const { data: clicks } = await createClient()
       .from('tool_clicks')
       .select('tool_id')
 

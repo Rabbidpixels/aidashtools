@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import type { Ad } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +33,7 @@ export default function AdsPage() {
 
   const fetchAds = async () => {
     setLoading(true)
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await createClient()
       .from('ads')
       .select('*')
       .order('created_at', { ascending: false })
@@ -71,7 +71,7 @@ export default function AdsPage() {
     if (!selectedAd) return
 
     setIsDeleting(true)
-    const { error } = await supabaseAdmin
+    const { error } = await createClient()
       .from('ads')
       .delete()
       .eq('id', selectedAd.id)
@@ -99,7 +99,7 @@ export default function AdsPage() {
 
     if (selectedAd) {
       // Update existing ad
-      const { error } = await supabaseAdmin
+      const { error } = await createClient()
         .from('ads')
         // @ts-expect-error - Type issue with Supabase client in client component
         .update(adData)
@@ -114,7 +114,7 @@ export default function AdsPage() {
       }
     } else {
       // Create new ad
-      const { error } = await supabaseAdmin
+      const { error } = await createClient()
         .from('ads')
         // @ts-expect-error - Type issue with Supabase client in client component
         .insert(adData)
@@ -131,7 +131,7 @@ export default function AdsPage() {
   }
 
   const toggleActive = async (ad: Ad) => {
-    const { error } = await supabaseAdmin
+    const { error } = await createClient()
       .from('ads')
       // @ts-expect-error - Type issue with Supabase client in client component
       .update({ active: !ad.active })

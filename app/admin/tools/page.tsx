@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import type { Tool, Category } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,7 +42,7 @@ export default function ToolsPage() {
     setLoading(true)
 
     // Fetch categories
-    const { data: categoriesData } = await supabaseAdmin
+    const { data: categoriesData } = await createClient()
       .from('categories')
       .select('*')
       .order('name')
@@ -50,7 +50,7 @@ export default function ToolsPage() {
     setCategories((categoriesData || []) as Category[])
 
     // Fetch tools
-    const { data: toolsData, error } = await supabaseAdmin
+    const { data: toolsData, error } = await createClient()
       .from('tools')
       .select('*')
       .order('created_at', { ascending: false })
@@ -95,7 +95,7 @@ export default function ToolsPage() {
     if (!selectedTool) return
 
     setIsDeleting(true)
-    const { error } = await supabaseAdmin
+    const { error } = await createClient()
       .from('tools')
       .delete()
       .eq('id', selectedTool.id)
@@ -125,7 +125,7 @@ export default function ToolsPage() {
 
     if (selectedTool) {
       // Update existing tool
-      const { error } = await supabaseAdmin
+      const { error } = await createClient()
         .from('tools')
         // @ts-expect-error - Type issue with Supabase client in client component
         .update(toolData)
@@ -140,7 +140,7 @@ export default function ToolsPage() {
       }
     } else {
       // Create new tool
-      const { error} = await supabaseAdmin
+      const { error} = await createClient()
         .from('tools')
         // @ts-expect-error - Type issue with Supabase client in client component
         .insert(toolData)
@@ -157,7 +157,7 @@ export default function ToolsPage() {
   }
 
   const toggleFeatured = async (tool: Tool) => {
-    const { error } = await supabaseAdmin
+    const { error } = await createClient()
       .from('tools')
       // @ts-expect-error - Type issue with Supabase client in client component
       .update({ featured: !tool.featured })

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import type { Category } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +33,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     setLoading(true)
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await createClient()
       .from('categories')
       .select('*')
       .order('created_at', { ascending: false })
@@ -71,7 +71,7 @@ export default function CategoriesPage() {
     if (!selectedCategory) return
 
     setIsDeleting(true)
-    const { error } = await supabaseAdmin
+    const { error } = await createClient()
       .from('categories')
       .delete()
       .eq('id', selectedCategory.id)
@@ -93,7 +93,7 @@ export default function CategoriesPage() {
 
     if (selectedCategory) {
       // Update existing category
-      const { error } = await supabaseAdmin
+      const { error } = await createClient()
         .from('categories')
         // @ts-expect-error - Type issue with Supabase client in client component
         .update({
@@ -112,7 +112,7 @@ export default function CategoriesPage() {
       }
     } else {
       // Create new category
-      const { error } = await supabaseAdmin
+      const { error } = await createClient()
         .from('categories')
         // @ts-expect-error - Type issue with Supabase client in client component
         .insert({
@@ -133,7 +133,7 @@ export default function CategoriesPage() {
   }
 
   const toggleFeatured = async (category: Category) => {
-    const { error } = await supabaseAdmin
+    const { error } = await createClient()
       .from('categories')
       // @ts-expect-error - Type issue with Supabase client in client component
       .update({ featured: !category.featured })
