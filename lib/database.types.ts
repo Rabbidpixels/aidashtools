@@ -41,6 +41,15 @@ export interface Setting {
   updated_at: string;
 }
 
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database schema type
 export interface Database {
   public: {
@@ -69,6 +78,11 @@ export interface Database {
         Row: Setting;
         Insert: Omit<Setting, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Setting, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      pages: {
+        Row: Page;
+        Insert: Omit<Page, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Page, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
+import Link from 'next/link'
 
 export async function Footer() {
   const currentYear = new Date().getFullYear()
@@ -51,25 +52,25 @@ export async function Footer() {
 
           {/* Footer Links */}
           <div className="flex flex-wrap justify-center items-center gap-2 mb-5">
-            <a href="/terms" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
+            <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
               Terms of Service
-            </a>
+            </Link>
             <span className="text-muted-foreground text-sm hidden sm:inline">•</span>
-            <a href="/privacy" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
+            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
               Privacy Policy
-            </a>
+            </Link>
             <span className="text-muted-foreground text-sm hidden sm:inline">•</span>
-            <a href="/disclaimer" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
+            <Link href="/disclaimer" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
               Disclaimer
-            </a>
+            </Link>
             <span className="text-muted-foreground text-sm hidden sm:inline">•</span>
-            <a href="/affiliate-disclosure" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
+            <Link href="/affiliate-disclosure" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
               Affiliate Disclosure
-            </a>
+            </Link>
             <span className="text-muted-foreground text-sm hidden sm:inline">•</span>
-            <a href="/contact" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
               Contact Us
-            </a>
+            </Link>
           </div>
 
           {/* Disclosure */}

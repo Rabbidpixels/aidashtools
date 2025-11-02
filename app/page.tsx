@@ -3,6 +3,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ToolCard } from '@/components/tool-card'
 import { AdPlacement } from '@/components/ad-placement'
+import { CategoryNav } from '@/components/category-nav'
 import type { Category, Tool } from '@/lib/database.types'
 import Image from 'next/image'
 
@@ -57,7 +58,17 @@ export default async function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1">
+      <main className="flex-1 relative">
+        {/* Left Skyscraper Ad */}
+        <aside className="hidden xl:block fixed left-0 top-32 w-40 h-[600px] z-30">
+          <AdPlacement location="left-skyscraper" />
+        </aside>
+
+        {/* Right Skyscraper Ad */}
+        <aside className="hidden xl:block fixed right-0 top-32 w-40 h-[600px] z-30">
+          <AdPlacement location="right-skyscraper" />
+        </aside>
+
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary to-accent text-white py-20">
           <div className="container mx-auto px-4">
@@ -76,13 +87,16 @@ export default async function Home() {
                   alt="AI Robot"
                   width={400}
                   height={400}
-                  className="w-full h-auto drop-shadow-2xl"
+                  className="w-full h-auto drop-shadow-2xl animate-float"
                   priority
                 />
               </div>
             </div>
           </div>
         </section>
+
+        {/* Category Navigation */}
+        <CategoryNav categories={typedCategories} />
 
         {/* Header Ad Placement */}
         <AdPlacement location="header" className="container mx-auto px-4 py-10" />
@@ -96,30 +110,39 @@ export default async function Home() {
               if (categoryTools.length === 0) return null
 
               return (
-                <section
-                  key={category.id}
-                  id={category.name.toLowerCase().replace(/\s+/g, '-')}
-                  className={`py-16 ${index % 2 === 0 ? 'bg-secondary' : 'bg-background'}`}
-                >
-                  <div className="container mx-auto px-4">
-                    <div className="mb-10">
-                      <h2 className="text-4xl font-bold mb-2 text-foreground">
-                        {category.name}
-                      </h2>
-                      {category.description && (
-                        <p className="text-muted-foreground text-lg">
-                          {category.description}
-                        </p>
-                      )}
-                    </div>
+                <div key={category.id}>
+                  <section
+                    id={category.name.toLowerCase().replace(/\s+/g, '-')}
+                    className={`py-16 ${index % 2 === 0 ? 'bg-secondary' : 'bg-background'}`}
+                  >
+                    <div className="container mx-auto px-4">
+                      <div className="mb-10">
+                        <h2 className="text-4xl font-bold mb-2 text-foreground">
+                          {category.name}
+                        </h2>
+                        {category.description && (
+                          <p className="text-muted-foreground text-lg">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {categoryTools.map((tool) => (
-                        <ToolCard key={tool.id} tool={tool} />
-                      ))}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {categoryTools.map((tool) => (
+                          <ToolCard key={tool.id} tool={tool} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
+
+                  {/* Category Banner Ad (between each category) */}
+                  {index < typedCategories.length - 1 && (
+                    <AdPlacement
+                      location="category-banner"
+                      className="container mx-auto px-4 py-8"
+                    />
+                  )}
+                </div>
               )
             })}
           </div>

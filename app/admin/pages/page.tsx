@@ -1,0 +1,205 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import type { Page } from '@/lib/database.types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Pencil, FileText } from 'lucide-react'
+
+export default function PagesPage() {
+  const [pages, setPages] = useState<Page[]>([])
+  const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const [selectedPage, setSelectedPage] = useState<Page | null>(null)
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    fetchPages()
+  }, [])
+
+  const fetchPages = async () => {
+    setLoading(true)
+    const { data, error } = await createClient()
+      .from('pages')
+      .select('*')
+      .order('slug')
+
+    if (error) {
+      console.error('Error fetching pages:', error)
+    } else {
+      setPages(data || [])
+    }
+    setLoading(false)
+  }
+
+  const handleEdit = (page: Page) => {
+    setSelectedPage(page)
+    setFormData({
+      title: page.title,
+      content: page.content,
+    })
+    setFormOpen(true)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedPage) return
+
+    setIsSubmitting(true)
+
+    const pageData = {
+      title: formData.title,
+      content: formData.content,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = await createClient()
+      .from('pages')
+      // @ts-expect-error - Type issue with Supabase client in client component
+      .update(pageData)
+      .eq('id', selectedPage.id)
+
+    if (error) {
+      console.error('Error updating page:', error)
+      alert('Failed to update page')
+    } else {
+      await fetchPages()
+      setFormOpen(false)
+    }
+    setIsSubmitting(false)
+  }
+
+  const getPageUrl = (slug: string) => {
+    return `/${slug}`
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Pages</h1>
+          <p className="text-muted-foreground">Manage your site&apos;s legal and informational pages</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          {loading ? (
+            <p className="text-center text-muted-foreground py-8">Loading...</p>
+          ) : pages.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No pages found.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Page</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Last Updated</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pages.map((page) => (
+                  <TableRow key={page.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        {page.title}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <a
+                        href={getPageUrl(page.slug)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-primary hover:underline"
+                      >
+                        {getPageUrl(page.slug)}
+                      </a>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {new Date(page.updated_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(page)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Page</DialogTitle>
+            <DialogDescription>
+              Update the page content below. This content will be displayed on your public site.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Page Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Page Title"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="content">Content *</Label>
+              <Textarea
+                id="content"
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                placeholder="Page content (supports plain text and line breaks)"
+                rows={15}
+                required
+                disabled={isSubmitting}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your page content. Line breaks will be preserved when displayed.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setFormOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

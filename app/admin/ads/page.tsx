@@ -229,14 +229,24 @@ export default function AdsPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="location">Location *</Label>
-              <Input
+              <select
                 id="location"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="e.g., header, sidebar, footer"
                 required
                 disabled={isSubmitting}
-              />
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Select a location...</option>
+                <option value="header">Header (Top of page)</option>
+                <option value="left-skyscraper">Left Skyscraper (Sidebar left)</option>
+                <option value="right-skyscraper">Right Skyscraper (Sidebar right)</option>
+                <option value="category-banner">Category Banner (Between categories)</option>
+                <option value="footer">Footer (Bottom of page)</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Choose where this ad should appear on your site
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="code_snippet">Code Snippet</Label>
