@@ -16,6 +16,7 @@ Before deploying to Vercel, ensure you've completed these steps:
 
 - [x] ✅ Code pushed to GitHub
 - [ ] 🔲 Supabase database tables created
+- [ ] 🔲 Existing tools imported (72 tools)
 - [ ] 🔲 Supabase authentication enabled
 - [ ] 🔲 Admin user created in Supabase
 - [ ] 🔲 Environment variables ready
@@ -39,7 +40,24 @@ Before deploying to Vercel, ensure you've completed these steps:
 - Go to **Table Editor**
 - You should see: `categories`, `tools`, `ads`, `tool_clicks`
 
-### 1.2 Enable Authentication
+### 1.2 Import Existing Tools (72 Tools from AidashTools.com)
+
+1. In **SQL Editor**, click **New Query** again
+2. Copy the entire contents of `supabase/migrations/import_existing_tools.sql`
+3. Paste into the SQL editor
+4. Click **Run**
+5. You should see: "Success. No rows returned"
+
+**What gets imported:**
+- 7 categories: AI Chatbots, Image Creation, Video Creation, Music Generation, Programming Tools, Web Design Tools, Data Analytics
+- 72 tools total (24 featured, 48 standard)
+- All with descriptions and links to external sites
+
+**Verify Import:**
+- Go to **Table Editor** → **categories** - should see 7 categories
+- Go to **Table Editor** → **tools** - should see 72 tools
+
+### 1.3 Enable Authentication
 
 1. In Supabase Dashboard, go to **Authentication** → **Providers**
 2. Find **Email** provider
@@ -47,7 +65,7 @@ Before deploying to Vercel, ensure you've completed these steps:
 4. **IMPORTANT**: Disable "Confirm email" for easier admin login
 5. Click **Save**
 
-### 1.3 Create Admin User
+### 1.4 Create Admin User
 
 1. Go to **Authentication** → **Users**
 2. Click **Add user** → **Create new user**
@@ -171,34 +189,38 @@ Auto-deploys are **already enabled by default** when you import from GitHub!
 
 ---
 
-## 🎉 Step 5: Add Your First Content
+## 🎉 Step 5: Verify Your Imported Content
 
-Now that everything is deployed, add some content!
+If you completed Step 1.2, your site is already populated with 72 tools!
 
-### 5.1 Create Categories
+### 5.1 View Categories
 
 1. Go to `/admin/categories`
-2. Click **Add Category**
-3. Create a few categories:
-   - AI Writing Tools
-   - Image Generation
-   - Code Assistants
+2. You should see 7 categories:
+   - AI Chatbots
+   - AI Image Creation
+   - AI Video Creation
+   - AI Music Generation
+   - AI Programming Tools
+   - AI Web Design Tools
+   - AI Data Analytics
 
-### 5.2 Add Tools
+### 5.2 Browse Tools
 
 1. Go to `/admin/tools`
-2. Click **Add Tool**
-3. Add some tools (examples):
-   - **ChatGPT**: AI Writing Tools, https://chat.openai.com, Featured ✅
-   - **DALL-E**: Image Generation, https://openai.com/dall-e, Featured ✅
-   - **GitHub Copilot**: Code Assistants, https://github.com/copilot
+2. You should see 72 tools across all categories
+3. 24 tools are marked as Featured
+4. You can edit, add more, or remove any tools as needed
 
 ### 5.3 View Public Site
 
 1. Go back to your homepage
 2. You should now see:
-   - Featured tools section (for featured tools)
-   - Category sections with tools listed
+   - Featured tools section with 24 popular tools (ChatGPT, Claude, Midjourney, etc.)
+   - Category sections with all 72 tools organized by category
+   - "Try" buttons linking to each tool's website
+
+**Note**: If you skipped Step 1.2, you can still manually add tools using the admin dashboard!
 
 ---
 
@@ -319,6 +341,7 @@ Your built-in analytics dashboard tracks tool clicks:
 ## 📝 Summary Checklist
 
 - [ ] ✅ Supabase database tables created
+- [ ] ✅ Existing tools imported (72 tools from AidashTools.com)
 - [ ] ✅ Authentication enabled in Supabase
 - [ ] ✅ Admin user created
 - [ ] ✅ Project deployed to Vercel
@@ -326,8 +349,7 @@ Your built-in analytics dashboard tracks tool clicks:
 - [ ] ✅ Admin login tested and working
 - [ ] ✅ Security verified (admin routes protected)
 - [ ] ✅ Auto-deploy enabled (GitHub → Vercel)
-- [ ] ✅ First categories and tools added
-- [ ] ✅ Public site showing content
+- [ ] ✅ Public site showing content with 72 imported tools
 - [ ] 🔲 Logo customized (optional)
 - [ ] 🔲 Custom domain added (optional)
 
