@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export function Header() {
   return (
@@ -10,6 +11,7 @@ export function Header() {
           </Link>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Link
               href="/login"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"

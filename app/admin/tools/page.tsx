@@ -7,18 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Card, CardContent } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
-
-interface ToolWithCategory extends Tool {
-  category?: Category
-}
+import { Plus, Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 
 export default function ToolsPage() {
-  const [tools, setTools] = useState<ToolWithCategory[]>([])
+  const [tools, setTools] = useState<Tool[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
@@ -49,24 +44,28 @@ export default function ToolsPage() {
 
     setCategories((categoriesData || []) as Category[])
 
-    // Fetch tools
+    // Fetch tools - featured first, then by display_order
     const { data: toolsData, error } = await createClient()
       .from('tools')
       .select('*')
+      .order('category_id')
+      .order('featured', { ascending: false })
+      .order('display_order', { ascending: true })
       .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching tools:', error)
     } else {
-      // Add category info to tools
-      const toolsWithCategories = (toolsData || []).map((tool: any) => ({
-        ...tool,
-        category: (categoriesData || []).find((cat: any) => cat.id === tool.category_id)
-      }))
-      setTools(toolsWithCategories as ToolWithCategory[])
+      setTools((toolsData || []) as Tool[])
     }
     setLoading(false)
   }
+
+  // Group tools by category
+  const toolsByCategory = categories.map(category => ({
+    category,
+    tools: tools.filter(t => t.category_id === category.id)
+  })).filter(group => group.tools.length > 0)
 
   const handleCreate = () => {
     setSelectedTool(null)
@@ -127,7 +126,7 @@ export default function ToolsPage() {
       // Update existing tool
       const { error } = await createClient()
         .from('tools')
-        // @ts-expect-error - Type issue with Supabase client in client component
+        // @ts-expect-error - Type issue with Supabase client
         .update(toolData)
         .eq('id', selectedTool.id)
 
@@ -139,11 +138,16 @@ export default function ToolsPage() {
         setFormOpen(false)
       }
     } else {
-      // Create new tool
-      const { error} = await createClient()
+      // Create new tool - get max display_order for category
+      const categoryTools = tools.filter(t => t.category_id === formData.category_id)
+      const maxOrder = categoryTools.length > 0
+        ? Math.max(...categoryTools.map(t => t.display_order || 0))
+        : 0
+
+      const { error } = await createClient()
         .from('tools')
-        // @ts-expect-error - Type issue with Supabase client in client component
-        .insert(toolData)
+        // @ts-expect-error - Type issue with Supabase client
+        .insert({ ...toolData, display_order: maxOrder + 1 })
 
       if (error) {
         console.error('Error creating tool:', error)
@@ -159,7 +163,7 @@ export default function ToolsPage() {
   const toggleFeatured = async (tool: Tool) => {
     const { error } = await createClient()
       .from('tools')
-      // @ts-expect-error - Type issue with Supabase client in client component
+      // @ts-expect-error - Type issue with Supabase client
       .update({ featured: !tool.featured })
       .eq('id', tool.id)
 
@@ -171,12 +175,44 @@ export default function ToolsPage() {
     }
   }
 
+  const moveToolOrder = async (tool: Tool, direction: 'up' | 'down') => {
+    const categoryTools = tools.filter(t => t.category_id === tool.category_id)
+    const currentIndex = categoryTools.findIndex(t => t.id === tool.id)
+
+    if (currentIndex === -1) return
+    if (direction === 'up' && currentIndex === 0) return
+    if (direction === 'down' && currentIndex === categoryTools.length - 1) return
+
+    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    const swapTool = categoryTools[swapIndex]
+
+    // Swap display_order values
+    const { error: error1 } = await createClient()
+      .from('tools')
+      // @ts-expect-error - Type issue with Supabase client
+      .update({ display_order: swapTool.display_order })
+      .eq('id', tool.id)
+
+    const { error: error2 } = await createClient()
+      .from('tools')
+      // @ts-expect-error - Type issue with Supabase client
+      .update({ display_order: tool.display_order })
+      .eq('id', swapTool.id)
+
+    if (error1 || error2) {
+      console.error('Error reordering tools:', error1 || error2)
+      alert('Failed to reorder tools')
+    } else {
+      await fetchData()
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Tools</h1>
-          <p className="text-muted-foreground">Manage your AI tools</p>
+          <p className="text-muted-foreground">Manage your AI tools by category</p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
@@ -184,66 +220,119 @@ export default function ToolsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
+      {loading ? (
+        <Card>
+          <CardContent className="pt-6">
             <p className="text-center text-muted-foreground py-8">Loading...</p>
-          ) : tools.length === 0 ? (
+          </CardContent>
+        </Card>
+      ) : tools.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
             <p className="text-center text-muted-foreground py-8">No tools yet. Create your first one!</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Link</TableHead>
-                  <TableHead>Featured</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tools.map((tool) => (
-                  <TableRow key={tool.id}>
-                    <TableCell className="font-medium">{tool.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {tool.category?.name || '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground truncate max-w-xs">
-                      {tool.link ? (
-                        <a href={tool.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          {tool.link}
-                        </a>
-                      ) : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={tool.featured}
-                        onCheckedChange={() => toggleFeatured(tool)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(tool)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(tool)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {toolsByCategory.map(({ category, tools: categoryTools }) => (
+            <Card key={category.id}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{category.name}</span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {categoryTools.length} tool{categoryTools.length !== 1 ? 's' : ''}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {categoryTools.map((tool, index) => (
+                    <div
+                      key={tool.id}
+                      className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-accent/5 transition"
+                    >
+                      {/* Reorder buttons */}
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => moveToolOrder(tool, 'up')}
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => moveToolOrder(tool, 'down')}
+                          disabled={index === categoryTools.length - 1}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Tool info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{tool.name}</h3>
+                          {tool.featured && (
+                            <span className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-medium">
+                              ⭐ Featured
+                            </span>
+                          )}
+                        </div>
+                        {tool.description && (
+                          <p className="text-sm text-muted-foreground truncate">{tool.description}</p>
+                        )}
+                        {tool.link && (
+                          <a
+                            href={tool.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline truncate block"
+                          >
+                            {tool.link}
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Featured toggle */}
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor={`featured-${tool.id}`} className="text-xs">Featured</Label>
+                        <Switch
+                          id={`featured-${tool.id}`}
+                          checked={tool.featured}
+                          onCheckedChange={() => toggleFeatured(tool)}
+                        />
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(tool)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(tool)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

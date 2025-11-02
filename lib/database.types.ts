@@ -15,6 +15,7 @@ export interface Tool {
   description: string | null;
   link: string | null;
   featured: boolean;
+  display_order: number;
   created_at: string;
 }
 
