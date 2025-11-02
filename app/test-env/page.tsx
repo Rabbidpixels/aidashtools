@@ -1,6 +1,25 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 export default function TestEnvPage() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="max-w-2xl w-full bg-card p-8 rounded-lg border">
+          <h1 className="text-2xl font-bold mb-6">Environment Variable Test</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
