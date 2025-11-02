@@ -10,7 +10,14 @@
       "Bash(npm install:*)",
       "Bash(dir /b:*)",
       "Bash(npm run build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial AidashTools setup with Next.js 15 and Supabase\n\nFeatures:\n- Next.js 15 with App Router, TypeScript, and Tailwind CSS\n- Supabase database integration\n- Admin dashboard with authentication\n- CRUD operations for categories, tools, and ads\n- Public-facing site with featured tools and categories\n- Analytics dashboard with click tracking\n- Ad placement system\n- Responsive design with Shadcn UI components\n- SEO optimized\n- Vercel deployment ready\n\n🤖 Generated with Claude Code (https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:aidashtools.com)",
+      "Bash(curl:*)",
+      "Bash(aidashtools_page.html)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
