@@ -24,6 +24,11 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     setLoading(true)
 
+    // Fetch all categories
+    const { data: categories } = await createClient()
+      .from('categories')
+      .select('*')
+
     // Fetch all tools
     const { data: tools } = await createClient()
       .from('tools')
@@ -40,6 +45,12 @@ export default function AnalyticsPage() {
       return
     }
 
+    // Create category map
+    const categoryMap: Record<string, string> = {}
+    categories?.forEach((category: any) => {
+      categoryMap[category.id] = category.name
+    })
+
     // Count clicks per tool
     const clickCounts: Record<string, number> = {}
     clicks.forEach((click: any) => {
@@ -48,7 +59,10 @@ export default function AnalyticsPage() {
 
     // Combine tools with their click counts
     const analyticsData: ToolAnalytics[] = (tools as Tool[]).map((tool) => ({
-      tool,
+      tool: {
+        ...tool,
+        categoryName: categoryMap[tool.category_id] || 'Unknown',
+      } as any,
       clickCount: clickCounts[tool.id] || 0,
     }))
 
@@ -137,7 +151,7 @@ export default function AnalyticsPage() {
                     <TableCell className="font-medium">#{index + 1}</TableCell>
                     <TableCell className="font-medium">{item.tool.name}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {item.tool.category_id.substring(0, 8)}...
+                      {(item.tool as any).categoryName || 'Unknown'}
                     </TableCell>
                     <TableCell>
                       <span className="font-semibold">{item.clickCount}</span>

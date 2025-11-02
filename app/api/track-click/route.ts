@@ -3,9 +3,13 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { toolId } = await request.json()
+    const body = await request.json()
+    const { toolId } = body
+
+    console.log('Track click request received:', { toolId })
 
     if (!toolId) {
+      console.error('No toolId provided')
       return NextResponse.json(
         { error: 'Tool ID is required' },
         { status: 400 }
@@ -13,24 +17,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert click record
-    const { error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('tool_clicks')
-      // @ts-expect-error - Type issue with Supabase client
       .insert({ tool_id: toolId })
+      .select()
 
     if (error) {
-      console.error('Error tracking click:', error)
+      console.error('Supabase error tracking click:', error)
       return NextResponse.json(
-        { error: 'Failed to track click' },
+        { error: 'Failed to track click', details: error.message },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ success: true })
+    console.log('Click tracked successfully:', data)
+    return NextResponse.json({ success: true, data })
   } catch (error) {
     console.error('Error in track-click API:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     )
   }
