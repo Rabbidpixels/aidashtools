@@ -147,56 +147,57 @@ export default function AdsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Ads</h1>
-          <p className="text-muted-foreground">Manage your advertisement placements</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ads</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your advertisement placements</p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Add Ad
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="p-6">
           {loading ? (
-            <p className="text-center text-muted-foreground py-8">Loading...</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
           ) : ads.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No ads yet. Create your first one!</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-12">No ads yet. Create your first one!</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Code Snippet</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ads.map((ad) => (
-                  <TableRow key={ad.id}>
-                    <TableCell className="font-medium">{ad.location}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <code className="text-xs bg-muted px-2 py-1 rounded">
-                        {ad.code_snippet ? ad.code_snippet.substring(0, 50) + '...' : '-'}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={ad.active}
-                        onCheckedChange={() => toggleActive(ad)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(ad)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Location</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Code Snippet</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Active</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ads.map((ad) => (
+                    <tr key={ad.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{ad.location}</td>
+                      <td className="py-4 px-4 text-gray-600 dark:text-gray-400">
+                        <code className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                          {ad.code_snippet ? ad.code_snippet.substring(0, 50) + '...' : '-'}
+                        </code>
+                      </td>
+                      <td className="py-4 px-4">
+                        <Switch
+                          checked={ad.active}
+                          onCheckedChange={() => toggleActive(ad)}
+                        />
+                      </td>
+                      <td className="py-4 px-4 text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(ad)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -204,14 +205,15 @@ export default function AdsPage() {
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
+          </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

@@ -209,47 +209,43 @@ export default function ToolsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Tools</h1>
-          <p className="text-muted-foreground">Manage your AI tools by category</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tools</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your AI tools by category</p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Add Tool
         </Button>
       </div>
 
       {loading ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground py-8">Loading...</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+        </div>
       ) : tools.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground py-8">No tools yet. Create your first one!</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-12">No tools yet. Create your first one!</p>
+        </div>
       ) : (
         <div className="space-y-6">
           {toolsByCategory.map(({ category, tools: categoryTools }) => (
-            <Card key={category.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{category.name}</span>
-                  <span className="text-sm font-normal text-muted-foreground">
+            <div key={category.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{category.name}</h3>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {categoryTools.length} tool{categoryTools.length !== 1 ? 's' : ''}
                   </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="space-y-3">
                   {categoryTools.map((tool, index) => (
                     <div
                       key={tool.id}
-                      className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-accent/5 transition"
+                      className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
                     >
                       {/* Reorder buttons */}
                       <div className="flex flex-col gap-1">
@@ -276,22 +272,22 @@ export default function ToolsPage() {
                       {/* Tool info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{tool.name}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{tool.name}</h3>
                           {tool.featured && (
-                            <span className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-medium">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
                               ⭐ Featured
                             </span>
                           )}
                         </div>
                         {tool.description && (
-                          <p className="text-sm text-muted-foreground truncate">{tool.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{tool.description}</p>
                         )}
                         {tool.link && (
                           <a
                             href={tool.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline truncate block"
+                            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline truncate block"
                           >
                             {tool.link}
                           </a>
@@ -328,8 +324,8 @@ export default function ToolsPage() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

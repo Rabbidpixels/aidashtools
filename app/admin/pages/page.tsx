@@ -85,67 +85,69 @@ export default function PagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Pages</h1>
-          <p className="text-muted-foreground">Manage your site&apos;s legal and informational pages</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Pages</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your site&apos;s legal and informational pages</p>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="p-6">
           {loading ? (
-            <p className="text-center text-muted-foreground py-8">Loading...</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
           ) : pages.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No pages found.</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-12">No pages found.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Page</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pages.map((page) => (
-                  <TableRow key={page.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        {page.title}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <a
-                        href={getPageUrl(page.slug)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-primary hover:underline"
-                      >
-                        {getPageUrl(page.slug)}
-                      </a>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {new Date(page.updated_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(page)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Page</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Slug</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Last Updated</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pages.map((page) => (
+                    <tr key={page.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-gray-400" />
+                          {page.title}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-gray-600 dark:text-gray-400">
+                        <a
+                          href={getPageUrl(page.slug)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+                        >
+                          {getPageUrl(page.slug)}
+                        </a>
+                      </td>
+                      <td className="py-4 px-4 text-gray-600 dark:text-gray-400 text-sm">
+                        {new Date(page.updated_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(page)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

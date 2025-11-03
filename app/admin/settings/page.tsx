@@ -77,27 +77,25 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Site Settings</h1>
-        <p className="text-muted-foreground">Manage your site-wide settings and footer content</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Site Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your site-wide settings and footer content</p>
       </div>
 
       {loading ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground py-8">Loading...</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Footer Settings</CardTitle>
-              <CardDescription>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Footer Settings</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Customize the footer content displayed on your public site
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="footer_copyright">Copyright Text</Label>
                 <Input
@@ -151,11 +149,11 @@ export default function SettingsPage() {
                   disabled={saving}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Settings'}
             </Button>

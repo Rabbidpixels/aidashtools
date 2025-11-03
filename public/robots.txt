@@ -1,0 +1,20 @@
+# robots.txt for AidashTools
+User-agent: *
+
+# Block admin panel and API routes
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /unauthorized
+Disallow: /test-env
+
+# Block Next.js internal routes
+Disallow: /_next/
+Disallow: /_vercel/
+
+# Allow everything else
+Allow: /
+
+# Sitemap location
+Sitemap: https://aidashtools.com/sitemap.xml
