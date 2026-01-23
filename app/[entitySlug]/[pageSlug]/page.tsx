@@ -178,66 +178,52 @@ export default async function DynamicAboutPage({ params }: PageProps) {
 export async function generateStaticParams() {
   const params: { entitySlug: string; pageSlug: string }[] = []
 
-  // Get all tools with their pages
+  // Get all tools with their slugs and IDs
   const { data: tools } = await supabaseAdmin
     .from('tools')
-    .select('slug')
+    .select('id, slug')
 
-  if (tools) {
-    for (const tool of tools) {
-      const { data: toolPages } = await supabaseAdmin
-        .from('tool_pages')
-        .select('slug, tool_id')
+  // Get all tool pages
+  const { data: toolPages } = await supabaseAdmin
+    .from('tool_pages')
+    .select('slug, tool_id')
 
-      if (toolPages) {
-        // Get tool_id for this tool slug
-        const { data: toolData } = await supabaseAdmin
-          .from('tools')
-          .select('id')
-          .eq('slug', tool.slug)
-          .single()
+  if (tools && toolPages) {
+    const toolsTyped = tools as { id: string; slug: string }[]
+    const toolPagesTyped = toolPages as { slug: string; tool_id: string }[]
 
-        if (toolData) {
-          const pagesForTool = toolPages.filter((p: { tool_id: string }) => p.tool_id === toolData.id)
-          for (const page of pagesForTool) {
-            params.push({
-              entitySlug: tool.slug,
-              pageSlug: page.slug,
-            })
-          }
-        }
+    for (const toolPage of toolPagesTyped) {
+      const tool = toolsTyped.find(t => t.id === toolPage.tool_id)
+      if (tool) {
+        params.push({
+          entitySlug: tool.slug,
+          pageSlug: toolPage.slug,
+        })
       }
     }
   }
 
-  // Get all categories with their pages
+  // Get all categories with their slugs and IDs
   const { data: categories } = await supabaseAdmin
     .from('categories')
-    .select('slug')
+    .select('id, slug')
 
-  if (categories) {
-    for (const category of categories) {
-      const { data: categoryPages } = await supabaseAdmin
-        .from('category_pages')
-        .select('slug, category_id')
+  // Get all category pages
+  const { data: categoryPages } = await supabaseAdmin
+    .from('category_pages')
+    .select('slug, category_id')
 
-      if (categoryPages) {
-        // Get category_id for this category slug
-        const { data: categoryData } = await supabaseAdmin
-          .from('categories')
-          .select('id')
-          .eq('slug', category.slug)
-          .single()
+  if (categories && categoryPages) {
+    const categoriesTyped = categories as { id: string; slug: string }[]
+    const categoryPagesTyped = categoryPages as { slug: string; category_id: string }[]
 
-        if (categoryData) {
-          const pagesForCategory = categoryPages.filter((p: { category_id: string }) => p.category_id === categoryData.id)
-          for (const page of pagesForCategory) {
-            params.push({
-              entitySlug: category.slug,
-              pageSlug: page.slug,
-            })
-          }
-        }
+    for (const categoryPage of categoryPagesTyped) {
+      const category = categoriesTyped.find(c => c.id === categoryPage.category_id)
+      if (category) {
+        params.push({
+          entitySlug: category.slug,
+          pageSlug: categoryPage.slug,
+        })
       }
     }
   }
