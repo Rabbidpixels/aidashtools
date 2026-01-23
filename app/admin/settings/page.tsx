@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { updateSettings } from '@/app/actions/revalidate'
+import { updateSettings, testServerAction } from '@/app/actions/revalidate'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,6 +51,7 @@ export default function SettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[Settings] Form submitted')
     setSaving(true)
 
     try {
@@ -59,7 +60,11 @@ export default function SettingsPage() {
         value,
       }))
 
+      console.log('[Settings] Calling updateSettings with', settings.length, 'settings')
+      console.log('[Settings] Settings:', settings)
+
       const result = await updateSettings(settings)
+      console.log('[Settings] Result received:', result)
 
       if (!result.success) {
         console.error('Error updating settings:', 'error' in result ? result.error : 'Unknown error')
@@ -152,7 +157,19 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                console.log('[Settings] Testing server action...')
+                const result = await testServerAction()
+                console.log('[Settings] Test result:', result)
+                alert('Test result: ' + JSON.stringify(result))
+              }}
+            >
+              Test Server Action
+            </Button>
             <Button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Settings'}

@@ -21,6 +21,12 @@ export async function revalidateHomePage() {
   return { success: true }
 }
 
+// Simple test action to verify server actions work
+export async function testServerAction() {
+  console.log('[testServerAction] Called!')
+  return { success: true, message: 'Server action works!' }
+}
+
 // Tool actions using admin client (bypasses RLS)
 export async function toggleToolFeatured(toolId: string, currentValue: boolean) {
   const configError = checkSupabaseConfig()
