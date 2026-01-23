@@ -65,3 +65,121 @@ export async function updatePage(pageId: string, slug: string, data: { title: st
   revalidatePath(`/${slug}`)
   return { success: true }
 }
+
+// Tool Page CRUD actions
+export async function createToolPage(data: { tool_id: string; slug: string; title: string; content: string }) {
+  const { error } = await supabaseAdmin
+    .from('tool_pages')
+    // @ts-expect-error - Type issue with Supabase client
+    .insert({
+      tool_id: data.tool_id,
+      slug: data.slug,
+      title: data.title,
+      content: data.content,
+    })
+
+  if (error) {
+    console.error('Error creating tool page:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/tool-pages')
+  return { success: true }
+}
+
+export async function updateToolPage(pageId: string, slug: string, data: { tool_id: string; slug: string; title: string; content: string }) {
+  const { error } = await supabaseAdmin
+    .from('tool_pages')
+    // @ts-expect-error - Type issue with Supabase client
+    .update({
+      tool_id: data.tool_id,
+      slug: data.slug,
+      title: data.title,
+      content: data.content,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', pageId)
+
+  if (error) {
+    console.error('Error updating tool page:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath(`/tool/${slug}`)
+  revalidatePath('/admin/tool-pages')
+  return { success: true }
+}
+
+export async function deleteToolPage(pageId: string) {
+  const { error } = await supabaseAdmin
+    .from('tool_pages')
+    .delete()
+    .eq('id', pageId)
+
+  if (error) {
+    console.error('Error deleting tool page:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/tool-pages')
+  return { success: true }
+}
+
+// Category Page CRUD actions
+export async function createCategoryPage(data: { category_id: string; slug: string; title: string; content: string }) {
+  const { error } = await supabaseAdmin
+    .from('category_pages')
+    // @ts-expect-error - Type issue with Supabase client
+    .insert({
+      category_id: data.category_id,
+      slug: data.slug,
+      title: data.title,
+      content: data.content,
+    })
+
+  if (error) {
+    console.error('Error creating category page:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/category-pages')
+  return { success: true }
+}
+
+export async function updateCategoryPage(pageId: string, slug: string, data: { category_id: string; slug: string; title: string; content: string }) {
+  const { error } = await supabaseAdmin
+    .from('category_pages')
+    // @ts-expect-error - Type issue with Supabase client
+    .update({
+      category_id: data.category_id,
+      slug: data.slug,
+      title: data.title,
+      content: data.content,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', pageId)
+
+  if (error) {
+    console.error('Error updating category page:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath(`/category/${slug}`)
+  revalidatePath('/admin/category-pages')
+  return { success: true }
+}
+
+export async function deleteCategoryPage(pageId: string) {
+  const { error } = await supabaseAdmin
+    .from('category_pages')
+    .delete()
+    .eq('id', pageId)
+
+  if (error) {
+    console.error('Error deleting category page:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/category-pages')
+  return { success: true }
+}

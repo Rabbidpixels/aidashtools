@@ -51,6 +51,26 @@ export interface Page {
   updated_at: string;
 }
 
+export interface ToolPage {
+  id: string;
+  tool_id: string;
+  slug: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoryPage {
+  id: string;
+  category_id: string;
+  slug: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database schema type
 export interface Database {
   public: {
@@ -84,6 +104,16 @@ export interface Database {
         Row: Page;
         Insert: Omit<Page, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Page, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      tool_pages: {
+        Row: ToolPage;
+        Insert: Omit<ToolPage, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<ToolPage, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      category_pages: {
+        Row: CategoryPage;
+        Insert: Omit<CategoryPage, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<CategoryPage, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };

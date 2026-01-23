@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { LogOut, LayoutDashboard, FolderKanban, Wrench, Megaphone, BarChart3, Settings, FileText, Menu } from 'lucide-react'
+import { LogOut, LayoutDashboard, FolderKanban, Wrench, Megaphone, BarChart3, Settings, FileText, Menu, BookOpen } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 // Prevent indexing of admin pages
@@ -18,7 +18,9 @@ if (typeof document !== 'undefined') {
 const navItems = [
   { href: '/admin/analytics', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/categories', label: 'Categories', icon: FolderKanban },
+  { href: '/admin/category-pages', label: 'About Category', icon: BookOpen },
   { href: '/admin/tools', label: 'Tools', icon: Wrench },
+  { href: '/admin/tool-pages', label: 'About Tool', icon: BookOpen },
   { href: '/admin/ads', label: 'Ads', icon: Megaphone },
   { href: '/admin/pages', label: 'Footer', icon: FileText },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
