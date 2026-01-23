@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS tools (
   description TEXT,
   link TEXT,
   featured BOOLEAN DEFAULT false,
+  visible BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS tool_clicks (
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_tools_category_id ON tools(category_id);
 CREATE INDEX IF NOT EXISTS idx_tools_featured ON tools(featured);
+CREATE INDEX IF NOT EXISTS idx_tools_visible ON tools(visible);
 CREATE INDEX IF NOT EXISTS idx_categories_featured ON categories(featured);
 CREATE INDEX IF NOT EXISTS idx_ads_active ON ads(active);
 CREATE INDEX IF NOT EXISTS idx_ads_location ON ads(location);

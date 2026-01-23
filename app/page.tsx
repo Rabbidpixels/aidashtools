@@ -20,10 +20,11 @@ export default async function Home() {
     .select('*')
     .order('name')
 
-  // Fetch all tools - featured first, then by name
+  // Fetch all visible tools - featured first, then by name
   const { data: allTools } = await supabaseAdmin
     .from('tools')
     .select('*')
+    .eq('visible', true)
     .order('featured', { ascending: false })
     .order('name', { ascending: true })
 

@@ -71,6 +71,10 @@ export async function Footer() {
             <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
               Contact Us
             </Link>
+            <span className="text-muted-foreground text-sm hidden sm:inline">•</span>
+            <Link href="/about" className="text-sm text-muted-foreground hover:text-primary hover:underline transition">
+              About Us
+            </Link>
           </div>
 
           {/* Disclosure */}

@@ -15,6 +15,7 @@ export interface Tool {
   description: string | null;
   link: string | null;
   featured: boolean;
+  visible: boolean;
   display_order?: number; // Optional until migration is run
   created_at: string;
 }

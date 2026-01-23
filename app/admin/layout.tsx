@@ -20,7 +20,7 @@ const navItems = [
   { href: '/admin/categories', label: 'Categories', icon: FolderKanban },
   { href: '/admin/tools', label: 'Tools', icon: Wrench },
   { href: '/admin/ads', label: 'Ads', icon: Megaphone },
-  { href: '/admin/pages', label: 'Pages', icon: FileText },
+  { href: '/admin/pages', label: 'Footer', icon: FileText },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 

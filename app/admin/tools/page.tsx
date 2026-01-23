@@ -25,6 +25,7 @@ export default function ToolsPage() {
     link: '',
     category_id: '',
     featured: false,
+    visible: true,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -69,7 +70,7 @@ export default function ToolsPage() {
 
   const handleCreate = () => {
     setSelectedTool(null)
-    setFormData({ name: '', description: '', link: '', category_id: '', featured: false })
+    setFormData({ name: '', description: '', link: '', category_id: '', featured: false, visible: true })
     setFormOpen(true)
   }
 
@@ -81,6 +82,7 @@ export default function ToolsPage() {
       link: tool.link || '',
       category_id: tool.category_id,
       featured: tool.featured,
+      visible: tool.visible,
     })
     setFormOpen(true)
   }
@@ -120,6 +122,7 @@ export default function ToolsPage() {
       link: formData.link || null,
       category_id: formData.category_id,
       featured: formData.featured,
+      visible: formData.visible,
     }
 
     if (selectedTool) {
@@ -170,6 +173,21 @@ export default function ToolsPage() {
     if (error) {
       console.error('Error updating featured status:', error)
       alert('Failed to update featured status')
+    } else {
+      await fetchData()
+    }
+  }
+
+  const toggleVisible = async (tool: Tool) => {
+    const { error } = await createClient()
+      .from('tools')
+      // @ts-expect-error - Type issue with Supabase client
+      .update({ visible: !tool.visible })
+      .eq('id', tool.id)
+
+    if (error) {
+      console.error('Error updating visibility status:', error)
+      alert('Failed to update visibility status')
     } else {
       await fetchData()
     }
@@ -278,6 +296,11 @@ export default function ToolsPage() {
                               ⭐ Featured
                             </span>
                           )}
+                          {!tool.visible && (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                              Hidden
+                            </span>
+                          )}
                         </div>
                         {tool.description && (
                           <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{tool.description}</p>
@@ -292,6 +315,16 @@ export default function ToolsPage() {
                             {tool.link}
                           </a>
                         )}
+                      </div>
+
+                      {/* Visible toggle */}
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor={`visible-${tool.id}`} className="text-xs">Visible</Label>
+                        <Switch
+                          id={`visible-${tool.id}`}
+                          checked={tool.visible}
+                          onCheckedChange={() => toggleVisible(tool)}
+                        />
                       </div>
 
                       {/* Featured toggle */}
@@ -391,6 +424,15 @@ export default function ToolsPage() {
                 placeholder="https://example.com"
                 disabled={isSubmitting}
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="visible"
+                checked={formData.visible}
+                onCheckedChange={(checked) => setFormData({ ...formData, visible: checked })}
+                disabled={isSubmitting}
+              />
+              <Label htmlFor="visible">Visible on site</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
