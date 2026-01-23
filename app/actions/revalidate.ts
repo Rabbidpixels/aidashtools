@@ -1,7 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
+
+// Helper to check Supabase configuration
+function checkSupabaseConfig() {
+  if (!isSupabaseAdminConfigured()) {
+    return { success: false, error: 'Server not configured: Missing SUPABASE_SERVICE_ROLE_KEY environment variable. Please add it to Vercel environment variables.' }
+  }
+  return null
+}
 
 export async function revalidatePagePath(slug: string) {
   revalidatePath(`/${slug}`)
@@ -15,6 +23,9 @@ export async function revalidateHomePage() {
 
 // Tool actions using admin client (bypasses RLS)
 export async function toggleToolFeatured(toolId: string, currentValue: boolean) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('tools')
@@ -36,6 +47,9 @@ export async function toggleToolFeatured(toolId: string, currentValue: boolean) 
 }
 
 export async function toggleToolVisibility(toolId: string, currentValue: boolean) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('tools')
@@ -57,6 +71,9 @@ export async function toggleToolVisibility(toolId: string, currentValue: boolean
 }
 
 export async function updatePage(pageId: string, slug: string, data: { title: string; content: string }) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('pages')
@@ -83,6 +100,9 @@ export async function updatePage(pageId: string, slug: string, data: { title: st
 
 // Tool Page CRUD actions
 export async function createToolPage(data: { tool_id: string; slug: string; title: string; content: string }) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('tool_pages')
@@ -108,6 +128,9 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
 }
 
 export async function updateToolPage(pageId: string, slug: string, data: { tool_id: string; slug: string; title: string; content: string }) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     // Get tool slug for revalidation
     const { data: toolData } = await supabaseAdmin
@@ -147,6 +170,9 @@ export async function updateToolPage(pageId: string, slug: string, data: { tool_
 }
 
 export async function deleteToolPage(pageId: string) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('tool_pages')
@@ -168,6 +194,9 @@ export async function deleteToolPage(pageId: string) {
 
 // Category Page CRUD actions
 export async function createCategoryPage(data: { category_id: string; slug: string; title: string; content: string }) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('category_pages')
@@ -193,6 +222,9 @@ export async function createCategoryPage(data: { category_id: string; slug: stri
 }
 
 export async function updateCategoryPage(pageId: string, slug: string, data: { category_id: string; slug: string; title: string; content: string }) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     // Get category slug for revalidation
     const { data: categoryData } = await supabaseAdmin
@@ -232,6 +264,9 @@ export async function updateCategoryPage(pageId: string, slug: string, data: { c
 }
 
 export async function deleteCategoryPage(pageId: string) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     const { error } = await supabaseAdmin
       .from('category_pages')
@@ -253,6 +288,9 @@ export async function deleteCategoryPage(pageId: string) {
 
 // Settings actions
 export async function updateSettings(settings: { key: string; value: string }[]) {
+  const configError = checkSupabaseConfig()
+  if (configError) return configError
+
   try {
     for (const setting of settings) {
       // First try to update existing setting
