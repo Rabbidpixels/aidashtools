@@ -100,10 +100,16 @@ export async function updatePage(pageId: string, slug: string, data: { title: st
 
 // Tool Page CRUD actions
 export async function createToolPage(data: { tool_id: string; slug: string; title: string; content: string }) {
+  console.log('[createToolPage] Starting with data:', { tool_id: data.tool_id, slug: data.slug, title: data.title })
+
   const configError = checkSupabaseConfig()
-  if (configError) return configError
+  if (configError) {
+    console.log('[createToolPage] Config error:', configError)
+    return configError
+  }
 
   try {
+    console.log('[createToolPage] Inserting into database...')
     const { error } = await supabaseAdmin
       .from('tool_pages')
       // @ts-expect-error - Type issue with Supabase client
@@ -114,15 +120,19 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
         content: data.content,
       })
 
+    console.log('[createToolPage] Insert result:', error ? 'error' : 'success')
+
     if (error) {
-      console.error('Error creating tool page:', error)
+      console.error('[createToolPage] Error:', error)
       return { success: false, error: error.message }
     }
 
+    console.log('[createToolPage] Revalidating...')
     revalidatePath('/admin/tool-pages')
+    console.log('[createToolPage] Done!')
     return { success: true }
   } catch (err) {
-    console.error('Exception in createToolPage:', err)
+    console.error('[createToolPage] Exception:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
@@ -288,43 +298,63 @@ export async function deleteCategoryPage(pageId: string) {
 
 // Settings actions
 export async function updateSettings(settings: { key: string; value: string }[]) {
+  console.log('[updateSettings] Starting with', settings.length, 'settings')
+
   const configError = checkSupabaseConfig()
-  if (configError) return configError
+  if (configError) {
+    console.log('[updateSettings] Config error:', configError)
+    return configError
+  }
 
   try {
     for (const setting of settings) {
+      console.log('[updateSettings] Processing setting:', setting.key)
       // First try to update existing setting
-      const { data: existing } = await supabaseAdmin
+      console.log('[updateSettings] Checking if setting exists...')
+      const { data: existing, error: selectError } = await supabaseAdmin
         .from('settings')
         .select('id')
         .eq('key', setting.key)
         .maybeSingle()
 
+      if (selectError) {
+        console.error('[updateSettings] Select error:', selectError)
+        return { success: false, error: selectError.message }
+      }
+
+      console.log('[updateSettings] Setting exists:', !!existing)
+
       let error
       if (existing) {
         // Update existing
+        console.log('[updateSettings] Updating existing setting...')
         const result = await supabaseAdmin
           .from('settings')
           // @ts-expect-error - Type issue with Supabase client
           .update({ value: setting.value, updated_at: new Date().toISOString() })
           .eq('key', setting.key)
         error = result.error
+        console.log('[updateSettings] Update result:', error ? 'error' : 'success')
       } else {
         // Insert new
+        console.log('[updateSettings] Inserting new setting...')
         const result = await supabaseAdmin
           .from('settings')
           // @ts-expect-error - Type issue with Supabase client
           .insert({ key: setting.key, value: setting.value })
         error = result.error
+        console.log('[updateSettings] Insert result:', error ? 'error' : 'success')
       }
 
       if (error) {
-        console.error(`Error updating setting ${setting.key}:`, error)
+        console.error(`[updateSettings] Error updating setting ${setting.key}:`, error)
         return { success: false, error: error.message }
       }
     }
 
+    console.log('[updateSettings] All settings processed, revalidating...')
     revalidatePath('/')
+    console.log('[updateSettings] Done!')
     return { success: true }
   } catch (err) {
     console.error('Exception in updateSettings:', err)
