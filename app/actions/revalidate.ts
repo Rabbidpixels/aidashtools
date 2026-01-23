@@ -208,38 +208,43 @@ export async function deleteCategoryPage(pageId: string) {
 
 // Settings actions
 export async function updateSettings(settings: { key: string; value: string }[]) {
-  for (const setting of settings) {
-    // First try to update existing setting
-    const { data: existing } = await supabaseAdmin
-      .from('settings')
-      .select('id')
-      .eq('key', setting.key)
-      .maybeSingle()
-
-    let error
-    if (existing) {
-      // Update existing
-      const result = await supabaseAdmin
+  try {
+    for (const setting of settings) {
+      // First try to update existing setting
+      const { data: existing } = await supabaseAdmin
         .from('settings')
-        // @ts-expect-error - Type issue with Supabase client
-        .update({ value: setting.value, updated_at: new Date().toISOString() })
+        .select('id')
         .eq('key', setting.key)
-      error = result.error
-    } else {
-      // Insert new
-      const result = await supabaseAdmin
-        .from('settings')
-        // @ts-expect-error - Type issue with Supabase client
-        .insert({ key: setting.key, value: setting.value })
-      error = result.error
+        .maybeSingle()
+
+      let error
+      if (existing) {
+        // Update existing
+        const result = await supabaseAdmin
+          .from('settings')
+          // @ts-expect-error - Type issue with Supabase client
+          .update({ value: setting.value, updated_at: new Date().toISOString() })
+          .eq('key', setting.key)
+        error = result.error
+      } else {
+        // Insert new
+        const result = await supabaseAdmin
+          .from('settings')
+          // @ts-expect-error - Type issue with Supabase client
+          .insert({ key: setting.key, value: setting.value })
+        error = result.error
+      }
+
+      if (error) {
+        console.error(`Error updating setting ${setting.key}:`, error)
+        return { success: false, error: error.message }
+      }
     }
 
-    if (error) {
-      console.error(`Error updating setting ${setting.key}:`, error)
-      return { success: false, error: error.message }
-    }
+    revalidatePath('/')
+    return { success: true }
+  } catch (err) {
+    console.error('Exception in updateSettings:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
-
-  revalidatePath('/')
-  return { success: true }
 }

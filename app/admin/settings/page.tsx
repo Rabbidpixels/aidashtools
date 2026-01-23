@@ -53,21 +53,26 @@ export default function SettingsPage() {
     e.preventDefault()
     setSaving(true)
 
-    const settings = Object.entries(formData).map(([key, value]) => ({
-      key,
-      value,
-    }))
+    try {
+      const settings = Object.entries(formData).map(([key, value]) => ({
+        key,
+        value,
+      }))
 
-    const result = await updateSettings(settings)
+      const result = await updateSettings(settings)
 
-    if (!result.success) {
-      console.error('Error updating settings:', result.error)
-      alert('Failed to save settings: ' + (result.error || ''))
-    } else {
-      alert('Settings saved successfully!')
+      if (!result.success) {
+        console.error('Error updating settings:', result.error)
+        alert('Failed to save settings: ' + (result.error || ''))
+      } else {
+        alert('Settings saved successfully!')
+      }
+    } catch (err) {
+      console.error('Exception saving settings:', err)
+      alert('An error occurred while saving settings')
+    } finally {
+      setSaving(false)
     }
-
-    setSaving(false)
   }
 
   return (
