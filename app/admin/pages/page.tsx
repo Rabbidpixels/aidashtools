@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { revalidatePagePath } from '@/app/actions/revalidate'
 import type { Page } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,6 +74,8 @@ export default function PagesPage() {
       console.error('Error updating page:', error)
       alert('Failed to update page')
     } else {
+      // Revalidate the page cache so changes appear immediately
+      await revalidatePagePath(selectedPage.slug)
       await fetchPages()
       setFormOpen(false)
     }

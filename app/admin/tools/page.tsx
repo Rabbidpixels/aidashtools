@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { revalidateHomePage } from '@/app/actions/revalidate'
 import type { Tool, Category } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -174,6 +175,8 @@ export default function ToolsPage() {
       console.error('Error updating featured status:', error)
       alert('Failed to update featured status')
     } else {
+      // Revalidate homepage so featured changes appear immediately
+      await revalidateHomePage()
       await fetchData()
     }
   }
@@ -187,8 +190,10 @@ export default function ToolsPage() {
 
     if (error) {
       console.error('Error updating visibility status:', error)
-      alert('Failed to update visibility status')
+      alert('Failed to update visibility status. Make sure the database migration has been run.')
     } else {
+      // Revalidate homepage so visibility changes appear immediately
+      await revalidateHomePage()
       await fetchData()
     }
   }
