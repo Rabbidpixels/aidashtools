@@ -89,11 +89,13 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
 
 export async function updateToolPage(pageId: string, slug: string, data: { tool_id: string; slug: string; title: string; content: string }) {
   // Get tool slug for revalidation
-  const { data: tool } = await supabaseAdmin
+  const { data: toolData } = await supabaseAdmin
     .from('tools')
     .select('slug')
     .eq('id', data.tool_id)
     .single()
+
+  const tool = toolData as { slug: string } | null
 
   const { error } = await supabaseAdmin
     .from('tool_pages')
@@ -157,11 +159,13 @@ export async function createCategoryPage(data: { category_id: string; slug: stri
 
 export async function updateCategoryPage(pageId: string, slug: string, data: { category_id: string; slug: string; title: string; content: string }) {
   // Get category slug for revalidation
-  const { data: category } = await supabaseAdmin
+  const { data: categoryData } = await supabaseAdmin
     .from('categories')
     .select('slug')
     .eq('id', data.category_id)
     .single()
+
+  const category = categoryData as { slug: string } | null
 
   const { error } = await supabaseAdmin
     .from('category_pages')
