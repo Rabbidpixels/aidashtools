@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { revalidatePagePath } from '@/app/actions/revalidate'
+import { updatePage } from '@/app/actions/revalidate'
 import type { Page } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,24 +58,15 @@ export default function PagesPage() {
 
     setIsSubmitting(true)
 
-    const pageData = {
+    const result = await updatePage(selectedPage.id, selectedPage.slug, {
       title: formData.title,
       content: formData.content,
-      updated_at: new Date().toISOString(),
-    }
+    })
 
-    const { error } = await createClient()
-      .from('pages')
-      // @ts-expect-error - Type issue with Supabase client in client component
-      .update(pageData)
-      .eq('id', selectedPage.id)
-
-    if (error) {
-      console.error('Error updating page:', error)
+    if (!result.success) {
+      console.error('Error updating page:', result.error)
       alert('Failed to update page')
     } else {
-      // Revalidate the page cache so changes appear immediately
-      await revalidatePagePath(selectedPage.slug)
       await fetchPages()
       setFormOpen(false)
     }

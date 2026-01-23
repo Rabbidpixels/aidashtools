@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { revalidateHomePage } from '@/app/actions/revalidate'
+import { toggleToolFeatured, toggleToolVisibility } from '@/app/actions/revalidate'
 import type { Tool, Category } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -165,35 +165,23 @@ export default function ToolsPage() {
   }
 
   const toggleFeatured = async (tool: Tool) => {
-    const { error } = await createClient()
-      .from('tools')
-      // @ts-expect-error - Type issue with Supabase client
-      .update({ featured: !tool.featured })
-      .eq('id', tool.id)
+    const result = await toggleToolFeatured(tool.id, tool.featured)
 
-    if (error) {
-      console.error('Error updating featured status:', error)
+    if (!result.success) {
+      console.error('Error updating featured status:', result.error)
       alert('Failed to update featured status')
     } else {
-      // Revalidate homepage so featured changes appear immediately
-      await revalidateHomePage()
       await fetchData()
     }
   }
 
   const toggleVisible = async (tool: Tool) => {
-    const { error } = await createClient()
-      .from('tools')
-      // @ts-expect-error - Type issue with Supabase client
-      .update({ visible: !tool.visible })
-      .eq('id', tool.id)
+    const result = await toggleToolVisibility(tool.id, tool.visible)
 
-    if (error) {
-      console.error('Error updating visibility status:', error)
+    if (!result.success) {
+      console.error('Error updating visibility status:', result.error)
       alert('Failed to update visibility status. Make sure the database migration has been run.')
     } else {
-      // Revalidate homepage so visibility changes appear immediately
-      await revalidateHomePage()
       await fetchData()
     }
   }
