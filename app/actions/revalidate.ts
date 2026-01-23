@@ -17,6 +17,7 @@ export async function revalidateHomePage() {
 export async function toggleToolFeatured(toolId: string, currentValue: boolean) {
   const { error } = await supabaseAdmin
     .from('tools')
+    // @ts-expect-error - Type issue with Supabase client
     .update({ featured: !currentValue })
     .eq('id', toolId)
 
@@ -32,6 +33,7 @@ export async function toggleToolFeatured(toolId: string, currentValue: boolean) 
 export async function toggleToolVisibility(toolId: string, currentValue: boolean) {
   const { error } = await supabaseAdmin
     .from('tools')
+    // @ts-expect-error - Type issue with Supabase client
     .update({ visible: !currentValue })
     .eq('id', toolId)
 
@@ -47,6 +49,7 @@ export async function toggleToolVisibility(toolId: string, currentValue: boolean
 export async function updatePage(pageId: string, slug: string, data: { title: string; content: string }) {
   const { error } = await supabaseAdmin
     .from('pages')
+    // @ts-expect-error - Type issue with Supabase client
     .update({
       title: data.title,
       content: data.content,
