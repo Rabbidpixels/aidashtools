@@ -95,7 +95,7 @@ export default function ToolPagesPage() {
     const result = await deleteToolPage(selectedPage.id)
 
     if (!result.success) {
-      console.error('Error deleting tool page:', result.error)
+      console.error('Error deleting tool page:', 'error' in result ? result.error : 'Unknown error')
       alert('Failed to delete tool page')
     } else {
       await fetchData()
@@ -114,7 +114,7 @@ export default function ToolPagesPage() {
       const result = await updateToolPage(selectedPage.id, formData.slug, formData)
 
       if (!result.success) {
-        console.error('Error updating tool page:', result.error)
+        console.error('Error updating tool page:', 'error' in result ? result.error : 'Unknown error')
         alert('Failed to update tool page')
       } else {
         await fetchData()
@@ -125,8 +125,8 @@ export default function ToolPagesPage() {
       const result = await createToolPage(formData)
 
       if (!result.success) {
-        console.error('Error creating tool page:', result.error)
-        alert('Failed to create tool page. ' + (result.error || ''))
+        console.error('Error creating tool page:', 'error' in result ? result.error : 'Unknown error')
+        alert('Failed to create tool page. ' + ('error' in result ? result.error : ''))
       } else {
         await fetchData()
         setFormOpen(false)

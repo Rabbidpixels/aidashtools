@@ -62,8 +62,8 @@ export default function SettingsPage() {
       const result = await updateSettings(settings)
 
       if (!result.success) {
-        console.error('Error updating settings:', result.error)
-        alert('Failed to save settings: ' + (result.error || ''))
+        console.error('Error updating settings:', 'error' in result ? result.error : 'Unknown error')
+        alert('Failed to save settings: ' + ('error' in result ? result.error : ''))
       } else {
         alert('Settings saved successfully!')
       }

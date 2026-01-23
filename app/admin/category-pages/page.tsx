@@ -95,7 +95,7 @@ export default function CategoryPagesPage() {
     const result = await deleteCategoryPage(selectedPage.id)
 
     if (!result.success) {
-      console.error('Error deleting category page:', result.error)
+      console.error('Error deleting category page:', 'error' in result ? result.error : 'Unknown error')
       alert('Failed to delete category page')
     } else {
       await fetchData()
@@ -114,7 +114,7 @@ export default function CategoryPagesPage() {
       const result = await updateCategoryPage(selectedPage.id, formData.slug, formData)
 
       if (!result.success) {
-        console.error('Error updating category page:', result.error)
+        console.error('Error updating category page:', 'error' in result ? result.error : 'Unknown error')
         alert('Failed to update category page')
       } else {
         await fetchData()
@@ -125,8 +125,8 @@ export default function CategoryPagesPage() {
       const result = await createCategoryPage(formData)
 
       if (!result.success) {
-        console.error('Error creating category page:', result.error)
-        alert('Failed to create category page. ' + (result.error || ''))
+        console.error('Error creating category page:', 'error' in result ? result.error : 'Unknown error')
+        alert('Failed to create category page. ' + ('error' in result ? result.error : ''))
       } else {
         await fetchData()
         setFormOpen(false)

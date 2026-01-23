@@ -64,7 +64,7 @@ export default function PagesPage() {
     })
 
     if (!result.success) {
-      console.error('Error updating page:', result.error)
+      console.error('Error updating page:', 'error' in result ? result.error : 'Unknown error')
       alert('Failed to update page')
     } else {
       await fetchPages()
