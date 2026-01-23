@@ -3,6 +3,7 @@
 export interface Category {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   featured: boolean;
   created_at: string;
@@ -12,6 +13,7 @@ export interface Tool {
   id: string;
   category_id: string;
   name: string;
+  slug: string;
   description: string | null;
   link: string | null;
   featured: boolean;

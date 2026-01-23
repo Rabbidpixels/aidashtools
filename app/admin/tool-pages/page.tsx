@@ -147,7 +147,7 @@ export default function ToolPagesPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">About Tool Pages</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Create detailed pages for individual tools (URL: /tool/slug)</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Create detailed pages for individual tools (URL: /{'{tool-slug}'}/{'{page-slug}'})</p>
         </div>
         <Button onClick={handleCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white">
           <Plus className="h-4 w-4 mr-2" />
@@ -187,12 +187,12 @@ export default function ToolPagesPage() {
                       </td>
                       <td className="py-4 px-4 text-gray-600 dark:text-gray-400">
                         <a
-                          href={`/tool/${page.slug}`}
+                          href={`/${page.tool?.slug || 'unknown'}/${page.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
                         >
-                          /tool/{page.slug}
+                          /{page.tool?.slug || 'unknown'}/{page.slug}
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       </td>
@@ -246,7 +246,20 @@ export default function ToolPagesPage() {
                 id="tool"
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.tool_id}
-                onChange={(e) => setFormData({ ...formData, tool_id: e.target.value })}
+                onChange={(e) => {
+                  const selectedTool = tools.find(t => t.id === e.target.value)
+                  if (selectedTool && !selectedPage) {
+                    const toolSlug = selectedTool.slug || generateSlug(selectedTool.name)
+                    setFormData({
+                      ...formData,
+                      tool_id: e.target.value,
+                      title: `What is ${selectedTool.name}?`,
+                      slug: `what-is-${toolSlug}`,
+                    })
+                  } else {
+                    setFormData({ ...formData, tool_id: e.target.value })
+                  }
+                }}
                 required
                 disabled={isSubmitting}
               >
@@ -276,9 +289,9 @@ export default function ToolPagesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="slug">URL Slug *</Label>
+              <Label htmlFor="slug">Page Slug *</Label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">/tool/</span>
+                <span className="text-sm text-muted-foreground">/{tools.find(t => t.id === formData.tool_id)?.slug || '{tool-slug}'}/</span>
                 <Input
                   id="slug"
                   value={formData.slug}
@@ -290,7 +303,7 @@ export default function ToolPagesPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                This will be the URL path for the page: /tool/{formData.slug || 'your-slug'}
+                Full URL: /{tools.find(t => t.id === formData.tool_id)?.slug || '{tool-slug}'}/{formData.slug || 'your-slug'}
               </p>
             </div>
             <div className="space-y-2">

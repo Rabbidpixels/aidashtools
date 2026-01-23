@@ -88,6 +88,13 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
 }
 
 export async function updateToolPage(pageId: string, slug: string, data: { tool_id: string; slug: string; title: string; content: string }) {
+  // Get tool slug for revalidation
+  const { data: tool } = await supabaseAdmin
+    .from('tools')
+    .select('slug')
+    .eq('id', data.tool_id)
+    .single()
+
   const { error } = await supabaseAdmin
     .from('tool_pages')
     // @ts-expect-error - Type issue with Supabase client
@@ -105,7 +112,9 @@ export async function updateToolPage(pageId: string, slug: string, data: { tool_
     return { success: false, error: error.message }
   }
 
-  revalidatePath(`/tool/${slug}`)
+  if (tool?.slug) {
+    revalidatePath(`/${tool.slug}/${data.slug}`)
+  }
   revalidatePath('/admin/tool-pages')
   return { success: true }
 }
@@ -147,6 +156,13 @@ export async function createCategoryPage(data: { category_id: string; slug: stri
 }
 
 export async function updateCategoryPage(pageId: string, slug: string, data: { category_id: string; slug: string; title: string; content: string }) {
+  // Get category slug for revalidation
+  const { data: category } = await supabaseAdmin
+    .from('categories')
+    .select('slug')
+    .eq('id', data.category_id)
+    .single()
+
   const { error } = await supabaseAdmin
     .from('category_pages')
     // @ts-expect-error - Type issue with Supabase client
@@ -164,7 +180,9 @@ export async function updateCategoryPage(pageId: string, slug: string, data: { c
     return { success: false, error: error.message }
   }
 
-  revalidatePath(`/category/${slug}`)
+  if (category?.slug) {
+    revalidatePath(`/${category.slug}/${data.slug}`)
+  }
   revalidatePath('/admin/category-pages')
   return { success: true }
 }
@@ -181,5 +199,43 @@ export async function deleteCategoryPage(pageId: string) {
   }
 
   revalidatePath('/admin/category-pages')
+  return { success: true }
+}
+
+// Settings actions
+export async function updateSettings(settings: { key: string; value: string }[]) {
+  for (const setting of settings) {
+    // First try to update existing setting
+    const { data: existing } = await supabaseAdmin
+      .from('settings')
+      .select('id')
+      .eq('key', setting.key)
+      .maybeSingle()
+
+    let error
+    if (existing) {
+      // Update existing
+      const result = await supabaseAdmin
+        .from('settings')
+        // @ts-expect-error - Type issue with Supabase client
+        .update({ value: setting.value, updated_at: new Date().toISOString() })
+        .eq('key', setting.key)
+      error = result.error
+    } else {
+      // Insert new
+      const result = await supabaseAdmin
+        .from('settings')
+        // @ts-expect-error - Type issue with Supabase client
+        .insert({ key: setting.key, value: setting.value })
+      error = result.error
+    }
+
+    if (error) {
+      console.error(`Error updating setting ${setting.key}:`, error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  revalidatePath('/')
   return { success: true }
 }

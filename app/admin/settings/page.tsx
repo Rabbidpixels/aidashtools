@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { updateSettings } from '@/app/actions/revalidate'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -52,27 +53,21 @@ export default function SettingsPage() {
     e.preventDefault()
     setSaving(true)
 
-    const updates = Object.entries(formData).map(([key, value]) => ({
+    const settings = Object.entries(formData).map(([key, value]) => ({
       key,
       value,
     }))
 
-    for (const update of updates) {
-      const { error } = await createClient()
-        .from('settings')
-        // @ts-expect-error - Type issue with Supabase client
-        .upsert(update, { onConflict: 'key' })
+    const result = await updateSettings(settings)
 
-      if (error) {
-        console.error(`Error updating ${update.key}:`, error)
-        alert(`Failed to update ${update.key}`)
-        setSaving(false)
-        return
-      }
+    if (!result.success) {
+      console.error('Error updating settings:', result.error)
+      alert('Failed to save settings: ' + (result.error || ''))
+    } else {
+      alert('Settings saved successfully!')
     }
 
     setSaving(false)
-    alert('Settings saved successfully!')
   }
 
   return (
