@@ -171,12 +171,15 @@ export default function SettingsPage() {
               type="button"
               variant="outline"
               onClick={async () => {
-                alert('Starting server action test...')
+                console.log('[Test] Starting server action test...')
                 try {
+                  console.log('[Test] Calling testServerAction...')
                   const result = await testServerAction()
-                  alert('Result: ' + JSON.stringify(result))
+                  console.log('[Test] Result:', result)
+                  alert('Success! Result: ' + JSON.stringify(result))
                 } catch (err) {
-                  alert('Error: ' + (err instanceof Error ? err.message : String(err)))
+                  console.error('[Test] Error:', err)
+                  alert('Error: ' + (err instanceof Error ? `${err.name}: ${err.message}` : String(err)))
                 }
               }}
             >
