@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { toggleToolFeatured, toggleToolVisibility } from '@/app/actions/revalidate'
 import type { Tool, Category } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -165,24 +164,44 @@ export default function ToolsPage() {
   }
 
   const toggleFeatured = async (tool: Tool) => {
-    const result = await toggleToolFeatured(tool.id, tool.featured)
+    try {
+      const res = await fetch('/api/tools', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: tool.id, field: 'featured', value: !tool.featured })
+      })
+      const result = await res.json()
 
-    if (!result.success) {
-      console.error('Error updating featured status:', 'error' in result ? result.error : 'Unknown error')
+      if (!result.success) {
+        console.error('Error updating featured status:', result.error)
+        alert('Failed to update featured status')
+      } else {
+        await fetchData()
+      }
+    } catch (err) {
+      console.error('Error updating featured status:', err)
       alert('Failed to update featured status')
-    } else {
-      await fetchData()
     }
   }
 
   const toggleVisible = async (tool: Tool) => {
-    const result = await toggleToolVisibility(tool.id, tool.visible)
+    try {
+      const res = await fetch('/api/tools', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: tool.id, field: 'visible', value: !tool.visible })
+      })
+      const result = await res.json()
 
-    if (!result.success) {
-      console.error('Error updating visibility status:', 'error' in result ? result.error : 'Unknown error')
-      alert('Failed to update visibility status. Make sure the database migration has been run.')
-    } else {
-      await fetchData()
+      if (!result.success) {
+        console.error('Error updating visibility status:', result.error)
+        alert('Failed to update visibility status')
+      } else {
+        await fetchData()
+      }
+    } catch (err) {
+      console.error('Error updating visibility status:', err)
+      alert('Failed to update visibility status')
     }
   }
 

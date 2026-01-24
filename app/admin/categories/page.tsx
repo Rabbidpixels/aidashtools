@@ -23,6 +23,7 @@ export default function CategoriesPage() {
     name: '',
     description: '',
     featured: false,
+    visible: true,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -48,7 +49,7 @@ export default function CategoriesPage() {
 
   const handleCreate = () => {
     setSelectedCategory(null)
-    setFormData({ name: '', description: '', featured: false })
+    setFormData({ name: '', description: '', featured: false, visible: true })
     setFormOpen(true)
   }
 
@@ -58,6 +59,7 @@ export default function CategoriesPage() {
       name: category.name,
       description: category.description || '',
       featured: category.featured,
+      visible: category.visible ?? true,
     })
     setFormOpen(true)
   }
@@ -100,6 +102,7 @@ export default function CategoriesPage() {
           name: formData.name,
           description: formData.description || null,
           featured: formData.featured,
+          visible: formData.visible,
         })
         .eq('id', selectedCategory.id)
 
@@ -119,6 +122,7 @@ export default function CategoriesPage() {
           name: formData.name,
           description: formData.description || null,
           featured: formData.featured,
+          visible: formData.visible,
         })
 
       if (error) {
@@ -133,17 +137,44 @@ export default function CategoriesPage() {
   }
 
   const toggleFeatured = async (category: Category) => {
-    const { error } = await createClient()
-      .from('categories')
-      // @ts-expect-error - Type issue with Supabase client in client component
-      .update({ featured: !category.featured })
-      .eq('id', category.id)
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: category.id, field: 'featured', value: !category.featured })
+      })
+      const result = await res.json()
 
-    if (error) {
-      console.error('Error updating featured status:', error)
+      if (!result.success) {
+        console.error('Error updating featured status:', result.error)
+        alert('Failed to update featured status')
+      } else {
+        await fetchCategories()
+      }
+    } catch (err) {
+      console.error('Error updating featured status:', err)
       alert('Failed to update featured status')
-    } else {
-      await fetchCategories()
+    }
+  }
+
+  const toggleVisible = async (category: Category) => {
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: category.id, field: 'visible', value: !category.visible })
+      })
+      const result = await res.json()
+
+      if (!result.success) {
+        console.error('Error updating visibility status:', result.error)
+        alert('Failed to update visibility status')
+      } else {
+        await fetchCategories()
+      }
+    } catch (err) {
+      console.error('Error updating visibility status:', err)
+      alert('Failed to update visibility status')
     }
   }
 
@@ -173,6 +204,7 @@ export default function CategoriesPage() {
                   <tr className="border-b border-gray-200 dark:border-gray-700">
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Name</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Visible</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Featured</th>
                     <th className="text-right py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -183,6 +215,12 @@ export default function CategoriesPage() {
                       <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{category.name}</td>
                       <td className="py-4 px-4 text-gray-600 dark:text-gray-400">
                         {category.description || '-'}
+                      </td>
+                      <td className="py-4 px-4">
+                        <Switch
+                          checked={category.visible ?? true}
+                          onCheckedChange={() => toggleVisible(category)}
+                        />
                       </td>
                       <td className="py-4 px-4">
                         <Switch
@@ -247,6 +285,15 @@ export default function CategoriesPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 disabled={isSubmitting}
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="visible"
+                checked={formData.visible}
+                onCheckedChange={(checked) => setFormData({ ...formData, visible: checked })}
+                disabled={isSubmitting}
+              />
+              <Label htmlFor="visible">Visible on site</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch

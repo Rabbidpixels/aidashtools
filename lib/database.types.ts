@@ -6,6 +6,7 @@ export interface Category {
   slug: string;
   description: string | null;
   featured: boolean;
+  visible: boolean;
   created_at: string;
 }
 
