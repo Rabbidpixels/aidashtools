@@ -76,9 +76,7 @@ export default function SettingsPage() {
         alert('Failed to save settings: ' + (result.error || 'Unknown error'))
       } else {
         console.log('[Settings] Success! Results:', result.results)
-        alert('Settings saved successfully!')
-        // Refresh to show saved data
-        window.location.reload()
+        alert('Settings saved! Check console for details. Refresh page to verify.')
       }
     } catch (err) {
       console.error('Exception saving settings:', err)
