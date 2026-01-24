@@ -172,6 +172,24 @@ export default function SettingsPage() {
               type="button"
               variant="outline"
               onClick={async () => {
+                console.log('[API] Testing API route...')
+                try {
+                  const res = await fetch('/api/test')
+                  const result = await res.json()
+                  console.log('[API] Result:', result)
+                  alert('API test: ' + JSON.stringify(result))
+                } catch (err) {
+                  console.error('[API] Error:', err)
+                  alert('API test error: ' + String(err))
+                }
+              }}
+            >
+              Test API
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
                 console.log('[Simple] Testing simple action...')
                 try {
                   const result = await simpleTest()
