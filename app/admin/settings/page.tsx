@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateSettings, testServerAction } from '@/app/actions/revalidate'
+import { simpleTest } from '@/app/actions/simple-test'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -166,6 +167,23 @@ export default function SettingsPage() {
               }}
             >
               Test Click
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                console.log('[Simple] Testing simple action...')
+                try {
+                  const result = await simpleTest()
+                  console.log('[Simple] Result:', result)
+                  alert('Simple test: ' + JSON.stringify(result))
+                } catch (err) {
+                  console.error('[Simple] Error:', err)
+                  alert('Simple test error: ' + String(err))
+                }
+              }}
+            >
+              Simple Test
             </Button>
             <Button
               type="button"
