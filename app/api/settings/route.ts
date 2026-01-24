@@ -5,6 +5,42 @@ import { revalidatePath } from 'next/cache'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+// GET - Fetch settings
+export async function GET(request: Request) {
+  try {
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      return NextResponse.json(
+        { success: false, error: 'Server not configured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
+
+    const { searchParams } = new URL(request.url)
+    const keys = searchParams.get('keys')?.split(',') || []
+
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .in('key', keys)
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, data })
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, error: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Save settings
 export async function POST(request: Request) {
   const logs: string[] = []
 

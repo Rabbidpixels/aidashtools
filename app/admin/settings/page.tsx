@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,25 +24,29 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     setLoading(true)
 
-    const { data, error } = await createClient()
-      .from('settings')
-      .select('*')
-      .in('key', ['footer_copyright', 'footer_disclosure', 'footer_tiktok_url', 'footer_facebook_url'])
+    try {
+      const keys = ['footer_copyright', 'footer_disclosure', 'footer_tiktok_url', 'footer_facebook_url']
+      const res = await fetch(`/api/settings?keys=${keys.join(',')}`)
+      const result = await res.json()
 
-    if (error) {
-      console.error('Error fetching settings:', error)
-    } else {
-      const settings: Record<string, string> = {}
-      data?.forEach((setting: any) => {
-        settings[setting.key] = setting.value || ''
-      })
-      setFormData({
-        footer_copyright: settings.footer_copyright || '',
-        footer_disclosure: settings.footer_disclosure || '',
-        footer_tiktok_url: settings.footer_tiktok_url || '',
-        footer_facebook_url: settings.footer_facebook_url || '',
-      })
+      if (!result.success) {
+        console.error('Error fetching settings:', result.error)
+      } else {
+        const settings: Record<string, string> = {}
+        result.data?.forEach((setting: { key: string; value: string }) => {
+          settings[setting.key] = setting.value || ''
+        })
+        setFormData({
+          footer_copyright: settings.footer_copyright || '',
+          footer_disclosure: settings.footer_disclosure || '',
+          footer_tiktok_url: settings.footer_tiktok_url || '',
+          footer_facebook_url: settings.footer_facebook_url || '',
+        })
+      }
+    } catch (err) {
+      console.error('Exception fetching settings:', err)
     }
+
     setLoading(false)
   }
 
