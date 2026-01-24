@@ -68,12 +68,17 @@ export default function SettingsPage() {
 
       const result = await res.json()
       console.log('[Settings] Result received:', result)
+      console.log('[Settings] Server logs:', result.logs)
 
       if (!result.success) {
         console.error('Error updating settings:', result.error)
+        console.error('Server logs:', result.logs)
         alert('Failed to save settings: ' + (result.error || 'Unknown error'))
       } else {
+        console.log('[Settings] Success! Results:', result.results)
         alert('Settings saved successfully!')
+        // Refresh to show saved data
+        window.location.reload()
       }
     } catch (err) {
       console.error('Exception saving settings:', err)
