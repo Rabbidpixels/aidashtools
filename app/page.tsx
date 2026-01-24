@@ -6,14 +6,12 @@ import { AdPlacement } from '@/components/ad-placement'
 import { CategoryNav } from '@/components/category-nav'
 import type { Category, Tool } from '@/lib/database.types'
 import Image from 'next/image'
-
-interface ToolWithCategory extends Tool {
-  category?: Category
-}
-
-export const revalidate = 60 // Revalidate every 60 seconds
+import { unstable_noStore as noStore } from 'next/cache'
 
 export default async function Home() {
+  // Disable caching to always show fresh data
+  noStore()
+
   // Fetch all categories
   const { data: categories } = await supabaseAdmin
     .from('categories')

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -53,7 +53,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 
-    revalidatePath('/')
+    // Revalidate both path and tag for reliable cache busting
+    revalidatePath('/', 'layout')
+    revalidateTag('tools')
     return NextResponse.json({ success: true, data })
   } catch (err) {
     return NextResponse.json(
