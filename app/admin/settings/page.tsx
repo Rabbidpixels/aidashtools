@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { updateSettings, testServerAction } from '@/app/actions/revalidate'
-import { simpleTest } from '@/app/actions/simple-test'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Save } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -61,15 +58,20 @@ export default function SettingsPage() {
         value,
       }))
 
-      console.log('[Settings] Calling updateSettings with', settings.length, 'settings')
-      console.log('[Settings] Settings:', settings)
+      console.log('[Settings] Calling API with', settings.length, 'settings')
 
-      const result = await updateSettings(settings)
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings })
+      })
+
+      const result = await res.json()
       console.log('[Settings] Result received:', result)
 
       if (!result.success) {
-        console.error('Error updating settings:', 'error' in result ? result.error : 'Unknown error')
-        alert('Failed to save settings: ' + ('error' in result ? result.error : ''))
+        console.error('Error updating settings:', result.error)
+        alert('Failed to save settings: ' + (result.error || 'Unknown error'))
       } else {
         alert('Settings saved successfully!')
       }
@@ -158,69 +160,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                alert('Button clicked!')
-              }}
-            >
-              Test Click
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                console.log('[API] Testing API route...')
-                try {
-                  const res = await fetch('/api/test')
-                  const result = await res.json()
-                  console.log('[API] Result:', result)
-                  alert('API test: ' + JSON.stringify(result))
-                } catch (err) {
-                  console.error('[API] Error:', err)
-                  alert('API test error: ' + String(err))
-                }
-              }}
-            >
-              Test API
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                console.log('[Simple] Testing simple action...')
-                try {
-                  const result = await simpleTest()
-                  console.log('[Simple] Result:', result)
-                  alert('Simple test: ' + JSON.stringify(result))
-                } catch (err) {
-                  console.error('[Simple] Error:', err)
-                  alert('Simple test error: ' + String(err))
-                }
-              }}
-            >
-              Simple Test
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                console.log('[Test] Starting server action test...')
-                try {
-                  console.log('[Test] Calling testServerAction...')
-                  const result = await testServerAction()
-                  console.log('[Test] Result:', result)
-                  alert('Success! Result: ' + JSON.stringify(result))
-                } catch (err) {
-                  console.error('[Test] Error:', err)
-                  alert('Error: ' + (err instanceof Error ? `${err.name}: ${err.message}` : String(err)))
-                }
-              }}
-            >
-              Test Server Action
-            </Button>
+          <div className="flex justify-end">
             <Button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Settings'}
