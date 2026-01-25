@@ -16,6 +16,7 @@ export default function ToolsPage() {
   const [tools, setTools] = useState<Tool[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null)
@@ -37,30 +38,39 @@ export default function ToolsPage() {
 
   const fetchData = async () => {
     setLoading(true)
+    setError(null)
 
-    // Fetch categories
-    const { data: categoriesData } = await createClient()
-      .from('categories')
-      .select('*')
-      .order('name')
+    try {
+      // Fetch categories
+      const { data: categoriesData, error: catError } = await createClient()
+        .from('categories')
+        .select('*')
+        .order('name')
 
-    setCategories((categoriesData || []) as Category[])
+      if (catError) {
+        throw new Error('Failed to load categories')
+      }
+      setCategories((categoriesData || []) as Category[])
 
-    // Fetch tools - featured first, then by display_order
-    const { data: toolsData, error } = await createClient()
-      .from('tools')
-      .select('*')
-      .order('category_id')
-      .order('featured', { ascending: false })
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false })
+      // Fetch tools - featured first, then by display_order
+      const { data: toolsData, error: toolsError } = await createClient()
+        .from('tools')
+        .select('*')
+        .order('category_id')
+        .order('featured', { ascending: false })
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching tools:', error)
-    } else {
+      if (toolsError) {
+        throw new Error('Failed to load tools')
+      }
       setTools((toolsData || []) as Tool[])
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to connect to database. Please check your connection and refresh.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   // Group tools by category
@@ -281,6 +291,15 @@ export default function ToolsPage() {
       {loading ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+        </div>
+      ) : error ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="text-center py-12">
+            <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+            <Button onClick={fetchData} variant="outline">
+              Try Again
+            </Button>
+          </div>
         </div>
       ) : tools.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">

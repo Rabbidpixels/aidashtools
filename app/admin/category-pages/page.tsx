@@ -19,6 +19,7 @@ export default function CategoryPagesPage() {
   const [pages, setPages] = useState<CategoryPageWithCategory[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedPage, setSelectedPage] = useState<CategoryPageWithCategory | null>(null)
@@ -37,32 +38,38 @@ export default function CategoryPagesPage() {
 
   const fetchData = async () => {
     setLoading(true)
+    setError(null)
 
-    // Fetch categories for dropdown
-    const { data: categoriesData } = await createClient()
-      .from('categories')
-      .select('*')
-      .order('name')
+    try {
+      // Fetch categories for dropdown
+      const { data: categoriesData, error: catError } = await createClient()
+        .from('categories')
+        .select('*')
+        .order('name')
 
-    setCategories((categoriesData || []) as Category[])
+      if (catError) throw new Error('Failed to load categories')
+      setCategories((categoriesData || []) as Category[])
 
-    // Fetch category pages
-    const { data: pagesData, error } = await createClient()
-      .from('category_pages')
-      .select('*')
-      .order('created_at', { ascending: false })
+      // Fetch category pages
+      const { data: pagesData, error: pagesError } = await createClient()
+        .from('category_pages')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching category pages:', error)
-    } else {
+      if (pagesError) throw new Error('Failed to load category pages')
+
       // Join with categories data
       const pagesWithCategories = (pagesData || []).map((page: CategoryPage) => ({
         ...page,
         category: (categoriesData || []).find((c: Category) => c.id === page.category_id)
       }))
       setPages(pagesWithCategories)
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to connect to database. Please check your connection and refresh.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleCreate = () => {
@@ -184,6 +191,13 @@ export default function CategoryPagesPage() {
         <div className="p-6">
           {loading ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+              <Button onClick={fetchData} variant="outline">
+                Try Again
+              </Button>
+            </div>
           ) : pages.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">No category pages yet. Create your first one!</p>
           ) : (

@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react'
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
@@ -35,17 +36,25 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     setLoading(true)
-    const { data, error } = await createClient()
-      .from('categories')
-      .select('*')
-      .order('created_at', { ascending: false })
+    setError(null)
+    try {
+      const { data, error: fetchError } = await createClient()
+        .from('categories')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching categories:', error)
-    } else {
-      setCategories(data || [])
+      if (fetchError) {
+        console.error('Error fetching categories:', fetchError)
+        setError('Failed to load categories. Please refresh the page.')
+      } else {
+        setCategories(data || [])
+      }
+    } catch (err) {
+      console.error('Error connecting to database:', err)
+      setError('Failed to connect to database. Please check your connection and refresh.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleCreate = () => {
@@ -211,6 +220,13 @@ export default function CategoriesPage() {
         <div className="p-6">
           {loading ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+              <Button onClick={fetchCategories} variant="outline">
+                Try Again
+              </Button>
+            </div>
           ) : categories.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">No categories yet. Create your first one!</p>
           ) : (

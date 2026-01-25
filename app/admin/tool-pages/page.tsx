@@ -19,6 +19,7 @@ export default function ToolPagesPage() {
   const [pages, setPages] = useState<ToolPageWithTool[]>([])
   const [tools, setTools] = useState<Tool[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedPage, setSelectedPage] = useState<ToolPageWithTool | null>(null)
@@ -37,32 +38,38 @@ export default function ToolPagesPage() {
 
   const fetchData = async () => {
     setLoading(true)
+    setError(null)
 
-    // Fetch tools for dropdown
-    const { data: toolsData } = await createClient()
-      .from('tools')
-      .select('*')
-      .order('name')
+    try {
+      // Fetch tools for dropdown
+      const { data: toolsData, error: toolsError } = await createClient()
+        .from('tools')
+        .select('*')
+        .order('name')
 
-    setTools((toolsData || []) as Tool[])
+      if (toolsError) throw new Error('Failed to load tools')
+      setTools((toolsData || []) as Tool[])
 
-    // Fetch tool pages
-    const { data: pagesData, error } = await createClient()
-      .from('tool_pages')
-      .select('*')
-      .order('created_at', { ascending: false })
+      // Fetch tool pages
+      const { data: pagesData, error: pagesError } = await createClient()
+        .from('tool_pages')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching tool pages:', error)
-    } else {
+      if (pagesError) throw new Error('Failed to load tool pages')
+
       // Join with tools data
       const pagesWithTools = (pagesData || []).map((page: ToolPage) => ({
         ...page,
         tool: (toolsData || []).find((t: Tool) => t.id === page.tool_id)
       }))
       setPages(pagesWithTools)
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to connect to database. Please check your connection and refresh.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleCreate = () => {
@@ -184,6 +191,13 @@ export default function ToolPagesPage() {
         <div className="p-6">
           {loading ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+              <Button onClick={fetchData} variant="outline">
+                Try Again
+              </Button>
+            </div>
           ) : pages.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">No tool pages yet. Create your first one!</p>
           ) : (

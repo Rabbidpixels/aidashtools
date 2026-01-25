@@ -16,6 +16,7 @@ import { Pencil, FileText } from 'lucide-react'
 export default function PagesPage() {
   const [pages, setPages] = useState<Page[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [selectedPage, setSelectedPage] = useState<Page | null>(null)
   const [formData, setFormData] = useState({
@@ -30,17 +31,21 @@ export default function PagesPage() {
 
   const fetchPages = async () => {
     setLoading(true)
-    const { data, error } = await createClient()
-      .from('pages')
-      .select('*')
-      .order('slug')
+    setError(null)
+    try {
+      const { data, error: fetchError } = await createClient()
+        .from('pages')
+        .select('*')
+        .order('slug')
 
-    if (error) {
-      console.error('Error fetching pages:', error)
-    } else {
+      if (fetchError) throw new Error('Failed to load pages')
       setPages(data || [])
+    } catch (err) {
+      console.error('Error fetching pages:', err)
+      setError('Failed to connect to database. Please check your connection and refresh.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleEdit = (page: Page) => {
@@ -90,6 +95,13 @@ export default function PagesPage() {
         <div className="p-6">
           {loading ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">Loading...</p>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+              <Button onClick={fetchPages} variant="outline">
+                Try Again
+              </Button>
+            </div>
           ) : pages.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-12">No pages found.</p>
           ) : (
