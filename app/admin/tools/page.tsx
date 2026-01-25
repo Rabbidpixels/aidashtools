@@ -98,18 +98,23 @@ export default function ToolsPage() {
     if (!selectedTool) return
 
     setIsDeleting(true)
-    const { error } = await createClient()
-      .from('tools')
-      .delete()
-      .eq('id', selectedTool.id)
+    try {
+      const response = await fetch(`/api/tools?id=${selectedTool.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('Error deleting tool:', result.error)
+        alert('Failed to delete tool')
+      } else {
+        await fetchData()
+        setDeleteDialogOpen(false)
+        setSelectedTool(null)
+      }
+    } catch (error) {
       console.error('Error deleting tool:', error)
       alert('Failed to delete tool')
-    } else {
-      await fetchData()
-      setDeleteDialogOpen(false)
-      setSelectedTool(null)
     }
     setIsDeleting(false)
   }
@@ -128,40 +133,51 @@ export default function ToolsPage() {
       visible: formData.visible,
     }
 
-    if (selectedTool) {
-      // Update existing tool
-      const { error } = await createClient()
-        .from('tools')
-        // @ts-expect-error - Type issue with Supabase client
-        .update(toolData)
-        .eq('id', selectedTool.id)
+    try {
+      if (selectedTool) {
+        // Update existing tool
+        const response = await fetch('/api/tools', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: selectedTool.id,
+            ...toolData,
+          }),
+        })
+        const result = await response.json()
 
-      if (error) {
-        console.error('Error updating tool:', error)
-        alert('Failed to update tool')
+        if (!result.success) {
+          console.error('Error updating tool:', result.error)
+          alert('Failed to update tool')
+        } else {
+          await fetchData()
+          setFormOpen(false)
+        }
       } else {
-        await fetchData()
-        setFormOpen(false)
-      }
-    } else {
-      // Create new tool - get max display_order for category
-      const categoryTools = tools.filter(t => t.category_id === formData.category_id)
-      const maxOrder = categoryTools.length > 0
-        ? Math.max(...categoryTools.map(t => t.display_order || 0))
-        : 0
+        // Create new tool - get max display_order for category
+        const categoryTools = tools.filter(t => t.category_id === formData.category_id)
+        const maxOrder = categoryTools.length > 0
+          ? Math.max(...categoryTools.map(t => t.display_order || 0))
+          : 0
 
-      const { error } = await createClient()
-        .from('tools')
-        // @ts-expect-error - Type issue with Supabase client
-        .insert({ ...toolData, display_order: maxOrder + 1 })
+        const response = await fetch('/api/tools', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...toolData, display_order: maxOrder + 1 }),
+        })
+        const result = await response.json()
 
-      if (error) {
-        console.error('Error creating tool:', error)
-        alert('Failed to create tool')
-      } else {
-        await fetchData()
-        setFormOpen(false)
+        if (!result.success) {
+          console.error('Error creating tool:', result.error)
+          alert('Failed to create tool. ' + (result.error || ''))
+        } else {
+          await fetchData()
+          setFormOpen(false)
+        }
       }
+    } catch (error) {
+      console.error('Error saving tool:', error)
+      alert('Failed to save tool')
     }
     setIsSubmitting(false)
   }
@@ -219,24 +235,33 @@ export default function ToolsPage() {
     const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
     const swapTool = categoryTools[swapIndex]
 
-    // Swap display_order values
-    const { error: error1 } = await createClient()
-      .from('tools')
-      // @ts-expect-error - Type issue with Supabase client
-      .update({ display_order: swapTool.display_order })
-      .eq('id', tool.id)
+    try {
+      // Swap display_order values
+      const [res1, res2] = await Promise.all([
+        fetch('/api/tools', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: tool.id, field: 'display_order', value: swapTool.display_order }),
+        }),
+        fetch('/api/tools', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: swapTool.id, field: 'display_order', value: tool.display_order }),
+        }),
+      ])
 
-    const { error: error2 } = await createClient()
-      .from('tools')
-      // @ts-expect-error - Type issue with Supabase client
-      .update({ display_order: tool.display_order })
-      .eq('id', swapTool.id)
+      const result1 = await res1.json()
+      const result2 = await res2.json()
 
-    if (error1 || error2) {
-      console.error('Error reordering tools:', error1 || error2)
+      if (!result1.success || !result2.success) {
+        console.error('Error reordering tools:', result1.error || result2.error)
+        alert('Failed to reorder tools')
+      } else {
+        await fetchData()
+      }
+    } catch (error) {
+      console.error('Error reordering tools:', error)
       alert('Failed to reorder tools')
-    } else {
-      await fetchData()
     }
   }
 

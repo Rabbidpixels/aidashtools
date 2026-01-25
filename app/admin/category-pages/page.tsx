@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { createCategoryPage, updateCategoryPage, deleteCategoryPage } from '@/app/actions/revalidate'
 import type { CategoryPage, Category } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,15 +91,23 @@ export default function CategoryPagesPage() {
     if (!selectedPage) return
 
     setIsDeleting(true)
-    const result = await deleteCategoryPage(selectedPage.id)
+    try {
+      const response = await fetch(`/api/category-pages?id=${selectedPage.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (!result.success) {
-      console.error('Error deleting category page:', 'error' in result ? result.error : 'Unknown error')
+      if (!result.success) {
+        console.error('Error deleting category page:', result.error)
+        alert('Failed to delete category page')
+      } else {
+        await fetchData()
+        setDeleteDialogOpen(false)
+        setSelectedPage(null)
+      }
+    } catch (error) {
+      console.error('Error deleting category page:', error)
       alert('Failed to delete category page')
-    } else {
-      await fetchData()
-      setDeleteDialogOpen(false)
-      setSelectedPage(null)
     }
     setIsDeleting(false)
   }
@@ -109,28 +116,46 @@ export default function CategoryPagesPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    if (selectedPage) {
-      // Update existing page
-      const result = await updateCategoryPage(selectedPage.id, formData.slug, formData)
+    try {
+      if (selectedPage) {
+        // Update existing page
+        const response = await fetch('/api/category-pages', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: selectedPage.id,
+            ...formData,
+          }),
+        })
+        const result = await response.json()
 
-      if (!result.success) {
-        console.error('Error updating category page:', 'error' in result ? result.error : 'Unknown error')
-        alert('Failed to update category page')
+        if (!result.success) {
+          console.error('Error updating category page:', result.error)
+          alert('Failed to update category page')
+        } else {
+          await fetchData()
+          setFormOpen(false)
+        }
       } else {
-        await fetchData()
-        setFormOpen(false)
-      }
-    } else {
-      // Create new page
-      const result = await createCategoryPage(formData)
+        // Create new page
+        const response = await fetch('/api/category-pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        })
+        const result = await response.json()
 
-      if (!result.success) {
-        console.error('Error creating category page:', 'error' in result ? result.error : 'Unknown error')
-        alert('Failed to create category page. ' + ('error' in result ? result.error : ''))
-      } else {
-        await fetchData()
-        setFormOpen(false)
+        if (!result.success) {
+          console.error('Error creating category page:', result.error)
+          alert('Failed to create category page. ' + (result.error || ''))
+        } else {
+          await fetchData()
+          setFormOpen(false)
+        }
       }
+    } catch (error) {
+      console.error('Error saving category page:', error)
+      alert('Failed to save category page')
     }
     setIsSubmitting(false)
   }

@@ -14,7 +14,7 @@ function getSupabase() {
   })
 }
 
-// POST - Create category
+// POST - Create tool page
 export async function POST(request: Request) {
   try {
     const supabase = getSupabase()
@@ -26,23 +26,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, description, featured, visible } = body
+    const { tool_id, slug, title, content } = body
 
-    if (!name) {
+    if (!tool_id || !slug || !title || !content) {
       return NextResponse.json(
-        { success: false, error: 'Missing required field: name' },
+        { success: false, error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
     const { data, error } = await supabase
-      .from('categories')
-      .insert({
-        name,
-        description: description || null,
-        featured: featured ?? false,
-        visible: visible ?? true,
-      })
+      .from('tool_pages')
+      .insert({ tool_id, slug, title, content })
       .select()
 
     if (error) {
@@ -59,7 +54,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH - Update category (toggle fields or full update)
+// PATCH - Update tool page
 export async function PATCH(request: Request) {
   try {
     const supabase = getSupabase()
@@ -71,50 +66,23 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { id, field, value } = body
+    const { id, slug, title, content, tool_id } = body
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing category id' },
+        { success: false, error: 'Missing page id' },
         { status: 400 }
       )
     }
 
-    // Single field toggle mode (for featured/visible toggles)
-    if (field !== undefined) {
-      const allowedFields = ['visible', 'featured']
-      if (!allowedFields.includes(field)) {
-        return NextResponse.json(
-          { success: false, error: `Field '${field}' not allowed` },
-          { status: 400 }
-        )
-      }
-
-      const { data, error } = await supabase
-        .from('categories')
-        .update({ [field]: value })
-        .eq('id', id)
-        .select()
-
-      if (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-      }
-
-      revalidatePath('/')
-      return NextResponse.json({ success: true, data })
-    }
-
-    // Full update mode
-    const { name, description, featured, visible } = body
-    const updateData: Record<string, unknown> = {}
-
-    if (name !== undefined) updateData.name = name
-    if (description !== undefined) updateData.description = description || null
-    if (featured !== undefined) updateData.featured = featured
-    if (visible !== undefined) updateData.visible = visible
+    const updateData: Record<string, string> = {}
+    if (slug) updateData.slug = slug
+    if (title) updateData.title = title
+    if (content) updateData.content = content
+    if (tool_id) updateData.tool_id = tool_id
 
     const { data, error } = await supabase
-      .from('categories')
+      .from('tool_pages')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -133,7 +101,7 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE - Delete category
+// DELETE - Delete tool page
 export async function DELETE(request: Request) {
   try {
     const supabase = getSupabase()
@@ -149,13 +117,13 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing category id' },
+        { success: false, error: 'Missing page id' },
         { status: 400 }
       )
     }
 
     const { error } = await supabase
-      .from('categories')
+      .from('tool_pages')
       .delete()
       .eq('id', id)
 

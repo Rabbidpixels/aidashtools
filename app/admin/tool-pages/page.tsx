@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { createToolPage, updateToolPage, deleteToolPage } from '@/app/actions/revalidate'
 import type { ToolPage, Tool } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,15 +91,23 @@ export default function ToolPagesPage() {
     if (!selectedPage) return
 
     setIsDeleting(true)
-    const result = await deleteToolPage(selectedPage.id)
+    try {
+      const response = await fetch(`/api/tool-pages?id=${selectedPage.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (!result.success) {
-      console.error('Error deleting tool page:', 'error' in result ? result.error : 'Unknown error')
+      if (!result.success) {
+        console.error('Error deleting tool page:', result.error)
+        alert('Failed to delete tool page')
+      } else {
+        await fetchData()
+        setDeleteDialogOpen(false)
+        setSelectedPage(null)
+      }
+    } catch (error) {
+      console.error('Error deleting tool page:', error)
       alert('Failed to delete tool page')
-    } else {
-      await fetchData()
-      setDeleteDialogOpen(false)
-      setSelectedPage(null)
     }
     setIsDeleting(false)
   }
@@ -109,28 +116,46 @@ export default function ToolPagesPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    if (selectedPage) {
-      // Update existing page
-      const result = await updateToolPage(selectedPage.id, formData.slug, formData)
+    try {
+      if (selectedPage) {
+        // Update existing page
+        const response = await fetch('/api/tool-pages', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: selectedPage.id,
+            ...formData,
+          }),
+        })
+        const result = await response.json()
 
-      if (!result.success) {
-        console.error('Error updating tool page:', 'error' in result ? result.error : 'Unknown error')
-        alert('Failed to update tool page')
+        if (!result.success) {
+          console.error('Error updating tool page:', result.error)
+          alert('Failed to update tool page')
+        } else {
+          await fetchData()
+          setFormOpen(false)
+        }
       } else {
-        await fetchData()
-        setFormOpen(false)
-      }
-    } else {
-      // Create new page
-      const result = await createToolPage(formData)
+        // Create new page
+        const response = await fetch('/api/tool-pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        })
+        const result = await response.json()
 
-      if (!result.success) {
-        console.error('Error creating tool page:', 'error' in result ? result.error : 'Unknown error')
-        alert('Failed to create tool page. ' + ('error' in result ? result.error : ''))
-      } else {
-        await fetchData()
-        setFormOpen(false)
+        if (!result.success) {
+          console.error('Error creating tool page:', result.error)
+          alert('Failed to create tool page. ' + (result.error || ''))
+        } else {
+          await fetchData()
+          setFormOpen(false)
+        }
       }
+    } catch (error) {
+      console.error('Error saving tool page:', error)
+      alert('Failed to save tool page')
     }
     setIsSubmitting(false)
   }

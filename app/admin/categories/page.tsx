@@ -73,18 +73,23 @@ export default function CategoriesPage() {
     if (!selectedCategory) return
 
     setIsDeleting(true)
-    const { error } = await createClient()
-      .from('categories')
-      .delete()
-      .eq('id', selectedCategory.id)
+    try {
+      const response = await fetch(`/api/categories?id=${selectedCategory.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('Error deleting category:', result.error)
+        alert('Failed to delete category')
+      } else {
+        await fetchCategories()
+        setDeleteDialogOpen(false)
+        setSelectedCategory(null)
+      }
+    } catch (error) {
       console.error('Error deleting category:', error)
       alert('Failed to delete category')
-    } else {
-      await fetchCategories()
-      setDeleteDialogOpen(false)
-      setSelectedCategory(null)
     }
     setIsDeleting(false)
   }
@@ -93,45 +98,53 @@ export default function CategoriesPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    if (selectedCategory) {
-      // Update existing category
-      const { error } = await createClient()
-        .from('categories')
-        // @ts-expect-error - Type issue with Supabase client in client component
-        .update({
-          name: formData.name,
-          description: formData.description || null,
-          featured: formData.featured,
-          visible: formData.visible,
-        })
-        .eq('id', selectedCategory.id)
+    const categoryData = {
+      name: formData.name,
+      description: formData.description || null,
+      featured: formData.featured,
+      visible: formData.visible,
+    }
 
-      if (error) {
-        console.error('Error updating category:', error)
-        alert('Failed to update category')
-      } else {
-        await fetchCategories()
-        setFormOpen(false)
-      }
-    } else {
-      // Create new category
-      const { error } = await createClient()
-        .from('categories')
-        // @ts-expect-error - Type issue with Supabase client in client component
-        .insert({
-          name: formData.name,
-          description: formData.description || null,
-          featured: formData.featured,
-          visible: formData.visible,
+    try {
+      if (selectedCategory) {
+        // Update existing category
+        const response = await fetch('/api/categories', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: selectedCategory.id,
+            ...categoryData,
+          }),
         })
+        const result = await response.json()
 
-      if (error) {
-        console.error('Error creating category:', error)
-        alert('Failed to create category')
+        if (!result.success) {
+          console.error('Error updating category:', result.error)
+          alert('Failed to update category')
+        } else {
+          await fetchCategories()
+          setFormOpen(false)
+        }
       } else {
-        await fetchCategories()
-        setFormOpen(false)
+        // Create new category
+        const response = await fetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(categoryData),
+        })
+        const result = await response.json()
+
+        if (!result.success) {
+          console.error('Error creating category:', result.error)
+          alert('Failed to create category. ' + (result.error || ''))
+        } else {
+          await fetchCategories()
+          setFormOpen(false)
+        }
       }
+    } catch (error) {
+      console.error('Error saving category:', error)
+      alert('Failed to save category')
     }
     setIsSubmitting(false)
   }
