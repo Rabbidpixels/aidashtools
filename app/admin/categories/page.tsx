@@ -303,7 +303,7 @@ export default function CategoriesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="info_link">Info Link (override "More Info" button URL)</Label>
+              <Label htmlFor="info_link">Info Link (override More Info button URL)</Label>
               <Input
                 id="info_link"
                 type="url"
