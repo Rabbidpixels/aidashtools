@@ -13,10 +13,11 @@ export default async function Home() {
   // Disable caching to always show fresh data
   noStore()
 
-  // Fetch all categories ordered by display_order then name
+  // Fetch all visible categories ordered by display_order then name
   const { data: categories } = await supabaseAdmin
     .from('categories')
     .select('*')
+    .eq('visible', true)
     .order('display_order', { ascending: true, nullsFirst: false })
     .order('name')
 

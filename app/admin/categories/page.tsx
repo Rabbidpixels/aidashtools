@@ -41,8 +41,8 @@ export default function CategoriesPage() {
       const { data, error: fetchError } = await createClient()
         .from('categories')
         .select('*')
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false })
+        .order('display_order', { ascending: true, nullsFirst: false })
+        .order('name', { ascending: true })
 
       if (fetchError) {
         console.error('Error fetching categories:', fetchError)
@@ -215,20 +215,18 @@ export default function CategoriesPage() {
     const swapCategory = categories[swapIndex]
 
     try {
-      // Swap display_order values
-      const currentOrder = category.display_order ?? currentIndex
-      const swapOrder = swapCategory.display_order ?? swapIndex
-
+      // Use current index positions for swapping - this ensures consistent ordering
+      // even when display_order values are null
       const [res1, res2] = await Promise.all([
         fetch('/api/categories', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: category.id, field: 'display_order', value: swapOrder }),
+          body: JSON.stringify({ id: category.id, field: 'display_order', value: swapIndex }),
         }),
         fetch('/api/categories', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: swapCategory.id, field: 'display_order', value: currentOrder }),
+          body: JSON.stringify({ id: swapCategory.id, field: 'display_order', value: currentIndex }),
         }),
       ])
 
@@ -236,8 +234,9 @@ export default function CategoriesPage() {
       const result2 = await res2.json()
 
       if (!result1.success || !result2.success) {
-        console.error('Error reordering categories:', result1.error || result2.error)
-        alert('Failed to reorder categories')
+        const errorMsg = result1.error || result2.error
+        console.error('Error reordering categories:', errorMsg)
+        alert('Failed to reorder categories: ' + errorMsg)
       } else {
         await fetchCategories()
       }
