@@ -13,10 +13,11 @@ export default async function Home() {
   // Disable caching to always show fresh data
   noStore()
 
-  // Fetch all categories
+  // Fetch all categories ordered by display_order then name
   const { data: categories } = await supabaseAdmin
     .from('categories')
     .select('*')
+    .order('display_order', { ascending: true, nullsFirst: false })
     .order('name')
 
   // Fetch all visible tools - featured first, then by name

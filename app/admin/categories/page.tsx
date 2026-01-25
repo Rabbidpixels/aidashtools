@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -41,6 +41,7 @@ export default function CategoriesPage() {
       const { data, error: fetchError } = await createClient()
         .from('categories')
         .select('*')
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: false })
 
       if (fetchError) {
@@ -203,6 +204,49 @@ export default function CategoriesPage() {
     }
   }
 
+  const moveCategoryOrder = async (category: Category, direction: 'up' | 'down') => {
+    const currentIndex = categories.findIndex(c => c.id === category.id)
+
+    if (currentIndex === -1) return
+    if (direction === 'up' && currentIndex === 0) return
+    if (direction === 'down' && currentIndex === categories.length - 1) return
+
+    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    const swapCategory = categories[swapIndex]
+
+    try {
+      // Swap display_order values
+      const currentOrder = category.display_order ?? currentIndex
+      const swapOrder = swapCategory.display_order ?? swapIndex
+
+      const [res1, res2] = await Promise.all([
+        fetch('/api/categories', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: category.id, field: 'display_order', value: swapOrder }),
+        }),
+        fetch('/api/categories', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: swapCategory.id, field: 'display_order', value: currentOrder }),
+        }),
+      ])
+
+      const result1 = await res1.json()
+      const result2 = await res2.json()
+
+      if (!result1.success || !result2.success) {
+        console.error('Error reordering categories:', result1.error || result2.error)
+        alert('Failed to reorder categories')
+      } else {
+        await fetchCategories()
+      }
+    } catch (error) {
+      console.error('Error reordering categories:', error)
+      alert('Failed to reorder categories')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
@@ -234,6 +278,7 @@ export default function CategoriesPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Order</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Name</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Description</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Visible</th>
@@ -242,8 +287,30 @@ export default function CategoriesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {categories.map((category) => (
+                  {categories.map((category, index) => (
                     <tr key={category.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="py-4 px-4">
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => moveCategoryOrder(category, 'up')}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => moveCategoryOrder(category, 'down')}
+                            disabled={index === categories.length - 1}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
                       <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{category.name}</td>
                       <td className="py-4 px-4 text-gray-600 dark:text-gray-400">
                         {category.description || '-'}

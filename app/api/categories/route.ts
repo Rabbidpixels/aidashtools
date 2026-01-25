@@ -91,9 +91,9 @@ export async function PATCH(request: Request) {
       )
     }
 
-    // Single field toggle mode (for featured/visible toggles)
+    // Single field toggle mode (for featured/visible/display_order toggles)
     if (field !== undefined) {
-      const allowedFields = ['visible', 'featured']
+      const allowedFields = ['visible', 'featured', 'display_order']
       if (!allowedFields.includes(field)) {
         return NextResponse.json(
           { success: false, error: `Field '${field}' not allowed` },
