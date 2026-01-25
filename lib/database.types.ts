@@ -5,6 +5,7 @@ export interface Category {
   name: string;
   slug: string;
   description: string | null;
+  info_link: string | null; // Manual override for "More Info" button
   featured: boolean;
   visible: boolean;
   created_at: string;

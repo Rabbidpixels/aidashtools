@@ -144,7 +144,7 @@ export default async function Home() {
               return (
                 <div key={category.id}>
                   <section
-                    id={category.name.toLowerCase().replace(/\s+/g, '-')}
+                    id={category.slug}
                     className={`py-16 ${index % 2 === 0 ? 'bg-secondary' : 'bg-background'}`}
                   >
                     <div className="container mx-auto px-4">

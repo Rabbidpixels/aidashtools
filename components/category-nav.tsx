@@ -8,9 +8,8 @@ interface CategoryNavProps {
 }
 
 export function CategoryNav({ categories }: CategoryNavProps) {
-  const scrollToCategory = (categoryName: string) => {
-    const id = categoryName.toLowerCase().replace(/\s+/g, '-')
-    const element = document.getElementById(id)
+  const scrollToCategory = (slug: string) => {
+    const element = document.getElementById(slug)
     if (element) {
       const offset = 100 // Offset for fixed header
       const elementPosition = element.getBoundingClientRect().top
@@ -32,7 +31,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
               key={category.id}
               variant="outline"
               size="sm"
-              onClick={() => scrollToCategory(category.name)}
+              onClick={() => scrollToCategory(category.slug)}
               className="bg-background hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               {category.name}

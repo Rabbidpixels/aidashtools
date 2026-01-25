@@ -22,6 +22,7 @@ export default function CategoriesPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    info_link: '',
     featured: false,
     visible: true,
   })
@@ -49,7 +50,7 @@ export default function CategoriesPage() {
 
   const handleCreate = () => {
     setSelectedCategory(null)
-    setFormData({ name: '', description: '', featured: false, visible: true })
+    setFormData({ name: '', description: '', info_link: '', featured: false, visible: true })
     setFormOpen(true)
   }
 
@@ -58,6 +59,7 @@ export default function CategoriesPage() {
     setFormData({
       name: category.name,
       description: category.description || '',
+      info_link: category.info_link || '',
       featured: category.featured,
       visible: category.visible ?? true,
     })
@@ -101,6 +103,7 @@ export default function CategoriesPage() {
     const categoryData = {
       name: formData.name,
       description: formData.description || null,
+      info_link: formData.info_link || null,
       featured: formData.featured,
       visible: formData.visible,
     }
@@ -296,6 +299,17 @@ export default function CategoriesPage() {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="info_link">Info Link (override "More Info" button URL)</Label>
+              <Input
+                id="info_link"
+                type="url"
+                placeholder="https://example.com/about-category"
+                value={formData.info_link}
+                onChange={(e) => setFormData({ ...formData, info_link: e.target.value })}
                 disabled={isSubmitting}
               />
             </div>

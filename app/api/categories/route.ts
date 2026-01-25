@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, description, featured, visible } = body
+    const { name, description, info_link, featured, visible } = body
 
     if (!name) {
       return NextResponse.json(
@@ -50,6 +50,7 @@ export async function POST(request: Request) {
         name,
         slug,
         description: description || null,
+        info_link: info_link || null,
         featured: featured ?? false,
         visible: visible ?? true,
       })
@@ -115,7 +116,7 @@ export async function PATCH(request: Request) {
     }
 
     // Full update mode
-    const { name, description, featured, visible } = body
+    const { name, description, info_link, featured, visible } = body
     const updateData: Record<string, unknown> = {}
 
     if (name !== undefined) {
@@ -123,6 +124,7 @@ export async function PATCH(request: Request) {
       updateData.slug = generateSlug(name) // Auto-update slug when name changes
     }
     if (description !== undefined) updateData.description = description || null
+    if (info_link !== undefined) updateData.info_link = info_link || null
     if (featured !== undefined) updateData.featured = featured
     if (visible !== undefined) updateData.visible = visible
 
