@@ -14,6 +14,13 @@ function getSupabase() {
   })
 }
 
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 // POST - Create category
 export async function POST(request: Request) {
   try {
@@ -35,10 +42,13 @@ export async function POST(request: Request) {
       )
     }
 
+    const slug = generateSlug(name)
+
     const { data, error } = await supabase
       .from('categories')
       .insert({
         name,
+        slug,
         description: description || null,
         featured: featured ?? false,
         visible: visible ?? true,
@@ -108,7 +118,10 @@ export async function PATCH(request: Request) {
     const { name, description, featured, visible } = body
     const updateData: Record<string, unknown> = {}
 
-    if (name !== undefined) updateData.name = name
+    if (name !== undefined) {
+      updateData.name = name
+      updateData.slug = generateSlug(name) // Auto-update slug when name changes
+    }
     if (description !== undefined) updateData.description = description || null
     if (featured !== undefined) updateData.featured = featured
     if (visible !== undefined) updateData.visible = visible
