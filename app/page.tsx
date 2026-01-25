@@ -4,8 +4,9 @@ import { Footer } from '@/components/footer'
 import { ToolCard } from '@/components/tool-card'
 import { AdPlacement } from '@/components/ad-placement'
 import { CategoryNav } from '@/components/category-nav'
-import type { Category, Tool } from '@/lib/database.types'
+import type { Category, Tool, ToolPage, CategoryPage } from '@/lib/database.types'
 import Image from 'next/image'
+import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 
 export default async function Home() {
@@ -26,9 +27,40 @@ export default async function Home() {
     .order('featured', { ascending: false })
     .order('name', { ascending: true })
 
+  // Fetch all tool_pages to know which tools have info pages
+  const { data: toolPages } = await supabaseAdmin
+    .from('tool_pages')
+    .select('tool_id, slug')
+
+  // Fetch all category_pages to know which categories have info pages
+  const { data: categoryPages } = await supabaseAdmin
+    .from('category_pages')
+    .select('category_id, slug')
+
   // Type cast the fetched data
   const typedCategories = (categories || []) as Category[]
   const typedAllTools = (allTools || []) as Tool[]
+  const typedToolPages = (toolPages || []) as Pick<ToolPage, 'tool_id' | 'slug'>[]
+  const typedCategoryPages = (categoryPages || []) as Pick<CategoryPage, 'category_id' | 'slug'>[]
+
+  // Create maps for quick lookup
+  const toolPageMap = new Map<string, string>()
+  typedToolPages.forEach(tp => {
+    // Find the tool slug for this tool_id
+    const tool = typedAllTools.find(t => t.id === tp.tool_id)
+    if (tool) {
+      toolPageMap.set(tp.tool_id, `/${tool.slug}/${tp.slug}`)
+    }
+  })
+
+  const categoryPageMap = new Map<string, string>()
+  typedCategoryPages.forEach(cp => {
+    // Find the category slug for this category_id
+    const category = typedCategories.find(c => c.id === cp.category_id)
+    if (category) {
+      categoryPageMap.set(cp.category_id, `/${category.slug}/${cp.slug}`)
+    }
+  })
 
   // Group tools by category and sort
   const toolsByCategory: Record<string, Tool[]> = {}
@@ -105,6 +137,7 @@ export default async function Home() {
           <div>
             {typedCategories.map((category, index) => {
               const categoryTools = toolsByCategory[category.id] || []
+              const categoryInfoUrl = categoryPageMap.get(category.id)
 
               if (categoryTools.length === 0) return null
 
@@ -116,19 +149,34 @@ export default async function Home() {
                   >
                     <div className="container mx-auto px-4">
                       <div className="mb-10">
-                        <h2 className="text-4xl font-bold mb-2 text-foreground">
-                          {category.name}
-                        </h2>
-                        {category.description && (
-                          <p className="text-muted-foreground text-lg">
-                            {category.description}
-                          </p>
-                        )}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div>
+                            <h2 className="text-4xl font-bold mb-2 text-foreground">
+                              {category.name}
+                            </h2>
+                            {category.description && (
+                              <p className="text-muted-foreground text-lg">
+                                {category.description}
+                              </p>
+                            )}
+                          </div>
+                          {categoryInfoUrl && (
+                            <Link href={categoryInfoUrl}>
+                              <span className="inline-flex items-center px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-medium transition-colors">
+                                More Info →
+                              </span>
+                            </Link>
+                          )}
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {categoryTools.map((tool) => (
-                          <ToolCard key={tool.id} tool={tool} />
+                          <ToolCard
+                            key={tool.id}
+                            tool={tool}
+                            infoPageUrl={toolPageMap.get(tool.id)}
+                          />
                         ))}
                       </div>
                     </div>

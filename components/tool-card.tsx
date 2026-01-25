@@ -2,15 +2,16 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 import type { Tool } from '@/lib/database.types'
 
 interface ToolCardProps {
   tool: Tool
-  featured?: boolean
+  infoPageUrl?: string | null // URL to the tool's info page (from tool_pages or manual info_link)
 }
 
-export function ToolCard({ tool, featured = false }: ToolCardProps) {
-  const handleClick = async () => {
+export function ToolCard({ tool, infoPageUrl }: ToolCardProps) {
+  const handleTryClick = async () => {
     if (!tool.link) return
 
     // Track the click (fire and forget)
@@ -27,6 +28,9 @@ export function ToolCard({ tool, featured = false }: ToolCardProps) {
     // Open the link
     window.open(tool.link, '_blank', 'noopener,noreferrer')
   }
+
+  // Determine the info URL - manual override takes precedence
+  const effectiveInfoUrl = tool.info_link || infoPageUrl
 
   return (
     <Card
@@ -50,14 +54,24 @@ export function ToolCard({ tool, featured = false }: ToolCardProps) {
             </p>
           )}
         </div>
-        <div className="mt-auto">
+        <div className="mt-auto flex gap-2">
           {tool.link && (
             <Button
-              onClick={handleClick}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-transform hover:scale-105"
+              onClick={handleTryClick}
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-transform hover:scale-105"
             >
-              Try {tool.name} →
+              Try →
             </Button>
+          )}
+          {effectiveInfoUrl && (
+            <Link href={effectiveInfoUrl} className="flex-1">
+              <Button
+                variant="outline"
+                className="w-full font-semibold transition-transform hover:scale-105"
+              >
+                More Info
+              </Button>
+            </Link>
           )}
         </div>
       </CardContent>

@@ -17,6 +17,7 @@ export interface Tool {
   slug: string;
   description: string | null;
   link: string | null;
+  info_link: string | null; // Manual override for "More Info" button
   featured: boolean;
   visible: boolean;
   display_order?: number; // Optional until migration is run

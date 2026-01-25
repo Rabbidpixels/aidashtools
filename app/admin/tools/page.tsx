@@ -23,6 +23,7 @@ export default function ToolsPage() {
     name: '',
     description: '',
     link: '',
+    info_link: '',
     category_id: '',
     featured: false,
     visible: true,
@@ -70,7 +71,7 @@ export default function ToolsPage() {
 
   const handleCreate = () => {
     setSelectedTool(null)
-    setFormData({ name: '', description: '', link: '', category_id: '', featured: false, visible: true })
+    setFormData({ name: '', description: '', link: '', info_link: '', category_id: '', featured: false, visible: true })
     setFormOpen(true)
   }
 
@@ -80,6 +81,7 @@ export default function ToolsPage() {
       name: tool.name,
       description: tool.description || '',
       link: tool.link || '',
+      info_link: tool.info_link || '',
       category_id: tool.category_id,
       featured: tool.featured,
       visible: tool.visible,
@@ -120,6 +122,7 @@ export default function ToolsPage() {
       name: formData.name,
       description: formData.description || null,
       link: formData.link || null,
+      info_link: formData.info_link || null,
       category_id: formData.category_id,
       featured: formData.featured,
       visible: formData.visible,
@@ -427,7 +430,7 @@ export default function ToolsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="link">Link</Label>
+              <Label htmlFor="link">Tool Link (external)</Label>
               <Input
                 id="link"
                 type="url"
@@ -436,6 +439,22 @@ export default function ToolsPage() {
                 placeholder="https://example.com"
                 disabled={isSubmitting}
               />
+              <p className="text-xs text-muted-foreground">
+                The external URL where users can try the tool
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="info_link">More Info Link (internal)</Label>
+              <Input
+                id="info_link"
+                value={formData.info_link}
+                onChange={(e) => setFormData({ ...formData, info_link: e.target.value })}
+                placeholder="/tool-slug/about"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional internal link for the &quot;More Info&quot; button. Leave empty to use auto-generated tool page link.
+              </p>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
