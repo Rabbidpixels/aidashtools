@@ -1,20 +1,77 @@
 # robots.txt for AidashTools
-User-agent: *
 
-# Block admin panel and API routes
+# Default rules for all crawlers
+User-agent: *
 Disallow: /admin
 Disallow: /admin/
 Disallow: /api/
 Disallow: /login
 Disallow: /unauthorized
 Disallow: /test-env
-
-# Block Next.js internal routes
 Disallow: /_next/
 Disallow: /_vercel/
-
-# Allow everything else
 Allow: /
+
+# Block AI crawlers/scrapers from the entire admin section
+User-agent: GPTBot
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Google-Extended
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: anthropic-ai
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Claude-Web
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: CCBot
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Bytespider
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Amazonbot
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: FacebookBot
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Meta-ExternalAgent
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: cohere-ai
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
 
 # Sitemap location
 Sitemap: https://aidashtools.com/sitemap.xml
