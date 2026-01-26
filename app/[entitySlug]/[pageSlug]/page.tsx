@@ -175,6 +175,33 @@ export default async function DynamicAboutPage({ params }: PageProps) {
       notFound()
     }
 
+    // Fetch all visible tools in this category
+    const { data: categoryToolsData } = await supabaseAdmin
+      .from('tools')
+      .select('*')
+      .eq('category_id', typedCategory.id)
+      .eq('visible', true)
+      .order('featured', { ascending: false })
+      .order('display_order', { ascending: true })
+      .order('name', { ascending: true })
+
+    const categoryTools = (categoryToolsData || []) as Tool[]
+
+    // Fetch tool pages for category tools to get info URLs
+    const { data: categoryToolPages } = await supabaseAdmin
+      .from('tool_pages')
+      .select('tool_id, slug')
+
+    const categoryToolPageMap = new Map<string, string>()
+    if (categoryToolPages) {
+      for (const tp of categoryToolPages as { tool_id: string; slug: string }[]) {
+        const tool = categoryTools.find(t => t.id === tp.tool_id)
+        if (tool) {
+          categoryToolPageMap.set(tp.tool_id, `/${tool.slug}/${tp.slug}`)
+        }
+      }
+    }
+
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -193,15 +220,7 @@ export default async function DynamicAboutPage({ params }: PageProps) {
 
             <div className="mb-8 p-4 bg-secondary rounded-lg">
               <p className="text-sm text-muted-foreground mb-2">This page is about the category:</p>
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-foreground">{typedCategory.name}</span>
-                <a
-                  href={`/#${typedCategory.slug}`}
-                  className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
-                >
-                  View Tools in this Category →
-                </a>
-              </div>
+              <span className="font-semibold text-foreground">{typedCategory.name}</span>
               {typedCategory.description && (
                 <p className="text-sm text-muted-foreground mt-2">{typedCategory.description}</p>
               )}
@@ -227,6 +246,22 @@ export default async function DynamicAboutPage({ params }: PageProps) {
             <div className="mt-12 text-sm text-muted-foreground">
               <p>Last updated: {new Date(typedCategoryPage.updated_at).toLocaleDateString()}</p>
             </div>
+
+            {/* Tools in this Category */}
+            {categoryTools.length > 0 && (
+              <div className="mt-16 pt-8 border-t border-border">
+                <h2 className="text-2xl font-bold mb-6 text-foreground">Tools in {typedCategory.name}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {categoryTools.map((tool) => (
+                    <ToolCard
+                      key={tool.id}
+                      tool={tool}
+                      infoPageUrl={categoryToolPageMap.get(tool.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </main>
 
