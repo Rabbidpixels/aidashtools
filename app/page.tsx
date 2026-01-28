@@ -29,6 +29,16 @@ export default async function Home() {
     .order('featured', { ascending: false })
     .order('name', { ascending: true })
 
+  // Fetch ALL tools (including hidden) for slug lookups when building page URLs
+  const { data: allToolsForSlugs } = await supabaseAdmin
+    .from('tools')
+    .select('id, slug')
+
+  // Fetch ALL categories (including hidden) for slug lookups when building page URLs
+  const { data: allCategoriesForSlugs } = await supabaseAdmin
+    .from('categories')
+    .select('id, slug')
+
   // Fetch all tool_pages to know which tools have info pages
   const { data: toolPages } = await supabaseAdmin
     .from('tool_pages')
@@ -44,23 +54,25 @@ export default async function Home() {
   const typedAllTools = (allTools || []) as Tool[]
   const typedToolPages = (toolPages || []) as Pick<ToolPage, 'tool_id' | 'slug'>[]
   const typedCategoryPages = (categoryPages || []) as Pick<CategoryPage, 'category_id' | 'slug'>[]
+  const toolSlugMap = new Map((allToolsForSlugs || []).map((t: { id: string; slug: string }) => [t.id, t.slug]))
+  const categorySlugMap = new Map((allCategoriesForSlugs || []).map((c: { id: string; slug: string }) => [c.id, c.slug]))
 
-  // Create maps for quick lookup
+  // Create maps for quick lookup - use ALL tools/categories for slug resolution
   const toolPageMap = new Map<string, string>()
   typedToolPages.forEach(tp => {
-    // Find the tool slug for this tool_id
-    const tool = typedAllTools.find(t => t.id === tp.tool_id)
-    if (tool) {
-      toolPageMap.set(tp.tool_id, `/${tool.slug}/${tp.slug}`)
+    // Find the tool slug for this tool_id from ALL tools
+    const toolSlug = toolSlugMap.get(tp.tool_id)
+    if (toolSlug) {
+      toolPageMap.set(tp.tool_id, `/${toolSlug}/${tp.slug}`)
     }
   })
 
   const categoryPageMap = new Map<string, string>()
   typedCategoryPages.forEach(cp => {
-    // Find the category slug for this category_id
-    const category = typedCategories.find(c => c.id === cp.category_id)
-    if (category) {
-      categoryPageMap.set(cp.category_id, `/${category.slug}/${cp.slug}`)
+    // Find the category slug for this category_id from ALL categories
+    const categorySlug = categorySlugMap.get(cp.category_id)
+    if (categorySlug) {
+      categoryPageMap.set(cp.category_id, `/${categorySlug}/${cp.slug}`)
     }
   })
 
