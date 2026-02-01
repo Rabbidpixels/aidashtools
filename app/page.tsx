@@ -4,14 +4,24 @@ import { Footer } from '@/components/footer'
 import { ToolCard } from '@/components/tool-card'
 import { AdPlacement } from '@/components/ad-placement'
 import { CategoryNav } from '@/components/category-nav'
-import type { Category, Tool, ToolPage, CategoryPage } from '@/lib/database.types'
+import type { Category, Tool, ToolPage, CategoryPage, Ad } from '@/lib/database.types'
 import Image from 'next/image'
 import Link from 'next/link'
-import { unstable_noStore as noStore } from 'next/cache'
+
+// Cache homepage for 24 hours - content changes are infrequent and controlled by admin
+export const revalidate = 86400
 
 export default async function Home() {
-  // Disable caching to always show fresh data
-  noStore()
+  // Fetch all ads in a single query instead of multiple queries per location
+  const { data: allAds } = await supabaseAdmin
+    .from('ads')
+    .select('*')
+    .eq('active', true)
+
+  const adMap = new Map<string, Ad>()
+  ;(allAds || []).forEach((ad: Ad) => {
+    adMap.set(ad.location, ad)
+  })
 
   // Fetch all visible categories ordered by display_order then name
   const { data: categories } = await supabaseAdmin
@@ -106,12 +116,12 @@ export default async function Home() {
       <main className="flex-1 relative">
         {/* Left Skyscraper Ad */}
         <aside className="hidden xl:block fixed left-0 top-32 w-40 h-[600px] z-30">
-          <AdPlacement location="left-skyscraper" />
+          <AdPlacement location="left-skyscraper" ad={adMap.get('left-skyscraper')} />
         </aside>
 
         {/* Right Skyscraper Ad */}
         <aside className="hidden xl:block fixed right-0 top-32 w-40 h-[600px] z-30">
-          <AdPlacement location="right-skyscraper" />
+          <AdPlacement location="right-skyscraper" ad={adMap.get('right-skyscraper')} />
         </aside>
 
         {/* Hero Section */}
@@ -144,7 +154,7 @@ export default async function Home() {
         <CategoryNav categories={typedCategories} />
 
         {/* Header Ad Placement */}
-        <AdPlacement location="header" className="container mx-auto px-4 py-10" />
+        <AdPlacement location="header" className="container mx-auto px-4 py-10" ad={adMap.get('header')} />
 
         {/* Categories Section */}
         {typedCategories.length > 0 ? (
@@ -201,6 +211,7 @@ export default async function Home() {
                     <AdPlacement
                       location="category-banner"
                       className="container mx-auto px-4 py-8"
+                      ad={adMap.get('category-banner')}
                     />
                   )}
                 </div>
@@ -220,7 +231,7 @@ export default async function Home() {
         )}
 
         {/* Footer Ad Placement */}
-        <AdPlacement location="footer" className="container mx-auto px-4 pb-8" />
+        <AdPlacement location="footer" className="container mx-auto px-4 pb-8" ad={adMap.get('footer')} />
       </main>
 
       <Footer />

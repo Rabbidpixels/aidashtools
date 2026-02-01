@@ -1,29 +1,20 @@
-import { supabaseAdmin } from '@/lib/supabase'
 import type { Ad } from '@/lib/database.types'
 
 interface AdPlacementProps {
   location: string
   className?: string
+  ad?: Ad | null
 }
 
-export async function AdPlacement({ location, className = '' }: AdPlacementProps) {
-  const { data: ad } = await supabaseAdmin
-    .from('ads')
-    .select('*')
-    .eq('location', location)
-    .eq('active', true)
-    .single()
-
-  const typedAd = ad as Ad | null
-
-  if (!typedAd || !typedAd.code_snippet) {
+export function AdPlacement({ className = '', ad }: AdPlacementProps) {
+  if (!ad || !ad.code_snippet) {
     return null
   }
 
   return (
     <div
       className={`ad-placement ${className}`}
-      dangerouslySetInnerHTML={{ __html: typedAd.code_snippet }}
+      dangerouslySetInnerHTML={{ __html: ad.code_snippet }}
     />
   )
 }
