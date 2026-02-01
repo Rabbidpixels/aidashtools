@@ -15,7 +15,7 @@ interface PageProps {
   }>
 }
 
-export const revalidate = 60 // Revalidate every 60 seconds
+export const revalidate = 604800 // Revalidate every 7 days
 
 export default async function DynamicAboutPage({ params }: PageProps) {
   const { entitySlug, pageSlug } = await params
