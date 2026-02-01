@@ -3,10 +3,7 @@ import type { Database } from './database.types';
 
 let supabaseAdminInstance: any = null;
 
-// Server-side client with Service Role Key (bypasses RLS)
-// Use this for server actions and API routes
-// Note: Using 'any' type to avoid build errors with Supabase v2.78 type inference
-export const supabaseAdmin: any = (() => {
+function getSupabaseAdmin() {
   if (!supabaseAdminInstance) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -31,7 +28,17 @@ export const supabaseAdmin: any = (() => {
     );
   }
   return supabaseAdminInstance;
-})();
+}
+
+// Server-side client with Service Role Key (bypasses RLS)
+// Use this for server actions and API routes
+// Note: Using 'any' type and Proxy for lazy initialization to avoid build errors
+export const supabaseAdmin: any = new Proxy({} as any, {
+  get(_target, prop) {
+    const client = getSupabaseAdmin();
+    return client[prop];
+  }
+});
 
 // Helper to check if admin client is properly configured
 export function isSupabaseAdminConfigured(): boolean {
