@@ -12,60 +12,54 @@ import Link from 'next/link'
 export const revalidate = 86400
 
 export default async function Home() {
-  // Fetch all ads in a single query instead of multiple queries per location
-  const { data: allAds } = await supabaseAdmin
-    .from('ads')
-    .select('*')
-    .eq('active', true)
+  // Optimized: Fetch all data in parallel with minimal queries
+  const [
+    { data: allAds },
+    { data: allCategories },
+    { data: allTools },
+    { data: toolPages },
+    { data: categoryPages },
+  ] = await Promise.all([
+    supabaseAdmin.from('ads').select('*').eq('active', true),
+    supabaseAdmin.from('categories').select('*'), // Fetch ALL categories once
+    supabaseAdmin.from('tools').select('*'), // Fetch ALL tools once
+    supabaseAdmin.from('tool_pages').select('tool_id, slug'),
+    supabaseAdmin.from('category_pages').select('category_id, slug'),
+  ])
 
+  // Build ad map
   const adMap = new Map<string, Ad>()
   ;(allAds || []).forEach((ad: Ad) => {
     adMap.set(ad.location, ad)
   })
 
-  // Fetch all visible categories ordered by display_order then name
-  const { data: categories } = await supabaseAdmin
-    .from('categories')
-    .select('*')
-    .eq('visible', true)
-    .order('display_order', { ascending: true, nullsFirst: false })
-    .order('name')
-
-  // Fetch all visible tools - featured first, then by name
-  const { data: allTools } = await supabaseAdmin
-    .from('tools')
-    .select('*')
-    .eq('visible', true)
-    .order('featured', { ascending: false })
-    .order('name', { ascending: true })
-
-  // Fetch ALL tools (including hidden) for slug lookups when building page URLs
-  const { data: allToolsForSlugs } = await supabaseAdmin
-    .from('tools')
-    .select('id, slug')
-
-  // Fetch ALL categories (including hidden) for slug lookups when building page URLs
-  const { data: allCategoriesForSlugs } = await supabaseAdmin
-    .from('categories')
-    .select('id, slug')
-
-  // Fetch all tool_pages to know which tools have info pages
-  const { data: toolPages } = await supabaseAdmin
-    .from('tool_pages')
-    .select('tool_id, slug')
-
-  // Fetch all category_pages to know which categories have info pages
-  const { data: categoryPages } = await supabaseAdmin
-    .from('category_pages')
-    .select('category_id, slug')
-
-  // Type cast the fetched data
-  const typedCategories = (categories || []) as Category[]
-  const typedAllTools = (allTools || []) as Tool[]
+  // Type cast and filter/sort in memory
+  const allCategoriesTyped = (allCategories || []) as Category[]
+  const allToolsTyped = (allTools || []) as Tool[]
   const typedToolPages = (toolPages || []) as Pick<ToolPage, 'tool_id' | 'slug'>[]
   const typedCategoryPages = (categoryPages || []) as Pick<CategoryPage, 'category_id' | 'slug'>[]
-  const toolSlugMap = new Map((allToolsForSlugs || []).map((t: { id: string; slug: string }) => [t.id, t.slug]))
-  const categorySlugMap = new Map((allCategoriesForSlugs || []).map((c: { id: string; slug: string }) => [c.id, c.slug]))
+
+  // Filter visible categories and sort
+  const typedCategories = allCategoriesTyped
+    .filter(c => c.visible)
+    .sort((a, b) => {
+      const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER
+      const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) return orderA - orderB
+      return a.name.localeCompare(b.name)
+    })
+
+  // Filter visible tools and sort
+  const typedAllTools = allToolsTyped
+    .filter(t => t.visible)
+    .sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1
+      return a.name.localeCompare(b.name)
+    })
+
+  // Build slug maps from ALL tools/categories (for page URL construction)
+  const toolSlugMap = new Map(allToolsTyped.map(t => [t.id, t.slug]))
+  const categorySlugMap = new Map(allCategoriesTyped.map(c => [c.id, c.slug]))
 
   // Create maps for quick lookup - use ALL tools/categories for slug resolution
   const toolPageMap = new Map<string, string>()
