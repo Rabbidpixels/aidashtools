@@ -1,18 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath, revalidateTag } from 'next/cache'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-function getSupabase() {
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    return null
-  }
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  })
-}
+import { validateAdminAuth } from '@/lib/auth'
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
 
 function generateSlug(name: string): string {
   return name
@@ -24,8 +13,13 @@ function generateSlug(name: string): string {
 // POST - Create tool
 export async function POST(request: Request) {
   try {
-    const supabase = getSupabase()
-    if (!supabase) {
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
@@ -44,7 +38,7 @@ export async function POST(request: Request) {
 
     const slug = generateSlug(name)
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tools')
       .insert({
         name,
@@ -77,8 +71,13 @@ export async function POST(request: Request) {
 // PATCH - Update tool (toggle fields or full update)
 export async function PATCH(request: Request) {
   try {
-    const supabase = getSupabase()
-    if (!supabase) {
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
@@ -105,7 +104,7 @@ export async function PATCH(request: Request) {
         )
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('tools')
         .update({ [field]: value })
         .eq('id', id)
@@ -136,7 +135,7 @@ export async function PATCH(request: Request) {
     if (visible !== undefined) updateData.visible = visible
     if (display_order !== undefined) updateData.display_order = display_order
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tools')
       .update(updateData)
       .eq('id', id)
@@ -160,8 +159,13 @@ export async function PATCH(request: Request) {
 // DELETE - Delete tool
 export async function DELETE(request: Request) {
   try {
-    const supabase = getSupabase()
-    if (!supabase) {
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
@@ -178,7 +182,7 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('tools')
       .delete()
       .eq('id', id)

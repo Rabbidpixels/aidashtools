@@ -1,24 +1,18 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-function getSupabase() {
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    return null
-  }
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  })
-}
+import { validateAdminAuth } from '@/lib/auth'
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
 
 // POST - Create tool page
 export async function POST(request: Request) {
   try {
-    const supabase = getSupabase()
-    if (!supabase) {
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
@@ -35,7 +29,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tool_pages')
       .insert({ tool_id, slug, title, content })
       .select()
@@ -57,8 +51,13 @@ export async function POST(request: Request) {
 // PATCH - Update tool page
 export async function PATCH(request: Request) {
   try {
-    const supabase = getSupabase()
-    if (!supabase) {
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
@@ -81,7 +80,7 @@ export async function PATCH(request: Request) {
     if (content) updateData.content = content
     if (tool_id) updateData.tool_id = tool_id
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tool_pages')
       .update(updateData)
       .eq('id', id)
@@ -104,8 +103,13 @@ export async function PATCH(request: Request) {
 // DELETE - Delete tool page
 export async function DELETE(request: Request) {
   try {
-    const supabase = getSupabase()
-    if (!supabase) {
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
@@ -122,7 +126,7 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('tool_pages')
       .delete()
       .eq('id', id)

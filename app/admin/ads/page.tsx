@@ -101,7 +101,6 @@ export default function AdsPage() {
       // Update existing ad
       const { error } = await createClient()
         .from('ads')
-        // @ts-expect-error - Type issue with Supabase client in client component
         .update(adData)
         .eq('id', selectedAd.id)
 
@@ -116,7 +115,6 @@ export default function AdsPage() {
       // Create new ad
       const { error } = await createClient()
         .from('ads')
-        // @ts-expect-error - Type issue with Supabase client in client component
         .insert(adData)
 
       if (error) {
@@ -133,7 +131,6 @@ export default function AdsPage() {
   const toggleActive = async (ad: Ad) => {
     const { error } = await createClient()
       .from('ads')
-      // @ts-expect-error - Type issue with Supabase client in client component
       .update({ active: !ad.active })
       .eq('id', ad.id)
 

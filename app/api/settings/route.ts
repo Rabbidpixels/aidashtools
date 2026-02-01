@@ -1,28 +1,22 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { validateAdminAuth } from '@/lib/auth'
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-// GET - Fetch settings
+// GET - Fetch settings (public endpoint)
 export async function GET(request: Request) {
   try {
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured' },
         { status: 500 }
       )
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
-
     const { searchParams } = new URL(request.url)
     const keys = searchParams.get('keys')?.split(',') || []
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('settings')
       .select('*')
       .in('key', keys)
@@ -40,24 +34,25 @@ export async function GET(request: Request) {
   }
 }
 
-// POST - Save settings
+// POST - Save settings (requires admin authentication)
 export async function POST(request: Request) {
   const logs: string[] = []
 
   try {
-    logs.push(`URL: ${supabaseUrl ? 'set' : 'missing'}`)
-    logs.push(`Key: ${supabaseServiceRoleKey ? 'set' : 'missing'}`)
+    // Validate admin authentication
+    const authResult = await validateAdminAuth()
+    if (authResult.error) {
+      return authResult.error
+    }
 
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
+    logs.push(`Authenticated as admin`)
+
+    if (!isSupabaseAdminConfigured()) {
       return NextResponse.json(
         { success: false, error: 'Server not configured: Missing Supabase environment variables', logs },
         { status: 500 }
       )
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
 
     const body = await request.json()
     const { settings } = body as { settings: { key: string; value: string }[] }
@@ -70,7 +65,7 @@ export async function POST(request: Request) {
       logs.push(`Processing: ${setting.key}`)
 
       // Check if setting exists
-      const { data: existing, error: selectError } = await supabase
+      const { data: existing, error: selectError } = await supabaseAdmin
         .from('settings')
         .select('id, key, value')
         .eq('key', setting.key)
@@ -85,7 +80,7 @@ export async function POST(request: Request) {
 
       if (existing) {
         // Update existing
-        const { data, error, count } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('settings')
           .update({ value: setting.value, updated_at: new Date().toISOString() })
           .eq('key', setting.key)
@@ -99,7 +94,7 @@ export async function POST(request: Request) {
         results.push({ key: setting.key, action: 'update', success: !error })
       } else {
         // Insert new
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('settings')
           .insert({ key: setting.key, value: setting.value })
           .select()

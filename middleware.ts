@@ -10,10 +10,12 @@ export async function middleware(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    // If env vars are missing, allow access but skip auth
+    // If env vars are missing, deny access to protected routes
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Middleware: Missing Supabase environment variables')
-      return supabaseResponse
+      console.error('Middleware: Missing Supabase environment variables - denying access')
+      const url = request.nextUrl.clone()
+      url.pathname = '/unauthorized'
+      return NextResponse.redirect(url)
     }
 
     const supabase = createServerClient(
@@ -75,8 +77,10 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   } catch (error) {
     console.error('Middleware error:', error)
-    // On error, allow the request through
-    return NextResponse.next()
+    // On error, deny access to protected routes for security
+    const url = request.nextUrl.clone()
+    url.pathname = '/unauthorized'
+    return NextResponse.redirect(url)
   }
 }
 

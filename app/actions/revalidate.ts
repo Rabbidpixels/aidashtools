@@ -35,7 +35,7 @@ export async function toggleToolFeatured(toolId: string, currentValue: boolean) 
   try {
     const { error } = await supabaseAdmin
       .from('tools')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .update({ featured: !currentValue })
       .eq('id', toolId)
 
@@ -59,7 +59,7 @@ export async function toggleToolVisibility(toolId: string, currentValue: boolean
   try {
     const { error } = await supabaseAdmin
       .from('tools')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .update({ visible: !currentValue })
       .eq('id', toolId)
 
@@ -83,7 +83,7 @@ export async function updatePage(pageId: string, slug: string, data: { title: st
   try {
     const { error } = await supabaseAdmin
       .from('pages')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .update({
         title: data.title,
         content: data.content,
@@ -118,7 +118,7 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
     console.log('[createToolPage] Inserting into database...')
     const { error } = await supabaseAdmin
       .from('tool_pages')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .insert({
         tool_id: data.tool_id,
         slug: data.slug,
@@ -159,7 +159,7 @@ export async function updateToolPage(pageId: string, slug: string, data: { tool_
 
     const { error } = await supabaseAdmin
       .from('tool_pages')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .update({
         tool_id: data.tool_id,
         slug: data.slug,
@@ -216,7 +216,7 @@ export async function createCategoryPage(data: { category_id: string; slug: stri
   try {
     const { error } = await supabaseAdmin
       .from('category_pages')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .insert({
         category_id: data.category_id,
         slug: data.slug,
@@ -253,7 +253,7 @@ export async function updateCategoryPage(pageId: string, slug: string, data: { c
 
     const { error } = await supabaseAdmin
       .from('category_pages')
-      // @ts-expect-error - Type issue with Supabase client
+      // @ts-ignore
       .update({
         category_id: data.category_id,
         slug: data.slug,
@@ -336,7 +336,7 @@ export async function updateSettings(settings: { key: string; value: string }[])
         console.log('[updateSettings] Updating existing setting...')
         const result = await supabaseAdmin
           .from('settings')
-          // @ts-expect-error - Type issue with Supabase client
+          // @ts-ignore
           .update({ value: setting.value, updated_at: new Date().toISOString() })
           .eq('key', setting.key)
         error = result.error
@@ -346,7 +346,7 @@ export async function updateSettings(settings: { key: string; value: string }[])
         console.log('[updateSettings] Inserting new setting...')
         const result = await supabaseAdmin
           .from('settings')
-          // @ts-expect-error - Type issue with Supabase client
+          // @ts-ignore
           .insert({ key: setting.key, value: setting.value })
         error = result.error
         console.log('[updateSettings] Insert result:', error ? 'error' : 'success')
