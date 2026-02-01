@@ -81,5 +81,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: [
+    /*
+     * Match only admin and login routes that need auth
+     * Excludes: static files, images, ads.txt, and all public pages
+     */
+    '/admin/:path*',
+    '/login',
+  ],
 }
