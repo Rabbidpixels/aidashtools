@@ -4,31 +4,36 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 // Tool slug mappings (filename pattern to database tool slug)
+// Based on auto-generated slugs from tool names in database
 const toolSlugMappings: Record<string, string> = {
+  // AI Chatbots
   'claude-what-is-claude': 'claude',
   'google-gemini-what-is-google-gemini': 'google-gemini',
   'microsoft-copilot-what-is-microsoft-copilot': 'microsoft-copilot',
   'meta-ai-what-is-meta-ai': 'meta-ai',
-  'characterai-what-is-characterai': 'character-ai',
+  'characterai-what-is-characterai': 'character-ai', // Character.AI
   'youchat-what-is-youchat': 'youchat',
+  // AI Image Creation
   'midjourney-what-is-midjourney': 'midjourney',
-  'dalle3-what-is-dalle3': 'dall-e-3',
-  'leonardoai-what-is-leonardoai': 'leonardo-ai',
+  'dalle3-what-is-dalle3': 'dall-e-3', // DALL-E 3
+  'leonardoai-what-is-leonardoai': 'leonardo-ai', // Leonardo.AI
   'stable-diffusion-what-is-stable-diffusion': 'stable-diffusion',
   'adobe-firefly-what-is-adobe-firefly': 'adobe-firefly',
   'canva-ai-what-is-canva-ai': 'canva-ai',
   'ideogram-what-is-ideogram': 'ideogram',
   'dreamstudio-what-is-dreamstudio': 'dreamstudio',
   'playgroundai-what-is-playgroundai': 'playground-ai',
-  'runway-gen3-what-is-runway-gen3': 'runway-gen-3',
+  // AI Video Creation
+  'runway-gen3-what-is-runway-gen3': 'runway-gen-3', // Runway Gen-3
   'pika-labs-what-is-pika-labs': 'pika-labs',
   'invideo-ai-what-is-invideo-ai': 'invideo-ai',
   'synthesia-what-is-synthesia': 'synthesia',
-  'd-id-what-is-d-id': 'd-id',
+  'd-id-what-is-d-id': 'd-id', // D-ID
   'heygen-what-is-heygen': 'heygen',
   'descript-what-is-descript': 'descript',
   'pictory-what-is-pictory': 'pictory',
   'fliki-what-is-fliki': 'fliki',
+  // AI Music Generation
   'suno-ai-what-is-suno-ai': 'suno-ai',
   'udio-what-is-udio': 'udio',
   'mubert-what-is-mubert': 'mubert',
@@ -36,8 +41,9 @@ const toolSlugMappings: Record<string, string> = {
   'soundraw-what-is-soundraw': 'soundraw',
   'boomy-what-is-boomy': 'boomy',
   'soundful-what-is-soundful': 'soundful',
-  'beatoven-ai-what-is-beatoven-ai': 'beatoven-ai',
+  'beatoven-ai-what-is-beatoven-ai': 'beatoven-ai', // Beatoven.ai
   'splash-pro-what-is-splash-pro': 'splash-pro',
+  // AI Programming Tools
   'github-copilot-what-is-github-copilot': 'github-copilot',
   'cursor-what-is-cursor': 'cursor',
   'replit-ai-what-is-replit-ai': 'replit-ai',
@@ -47,6 +53,7 @@ const toolSlugMappings: Record<string, string> = {
   'pieces-for-developers-what-is-pieces-for-developers': 'pieces-for-developers',
   'sourcegraph-cody-what-is-sourcegraph-cody': 'sourcegraph-cody',
   'v0-by-vercel-what-is-v0-by-vercel': 'v0-by-vercel',
+  // AI Web Design Tools
   'framer-ai-what-is-framer-ai': 'framer-ai',
   'webflow-ai-what-is-webflow-ai': 'webflow-ai',
   'wix-adi-what-is-wix-adi': 'wix-adi',
@@ -56,6 +63,7 @@ const toolSlugMappings: Record<string, string> = {
   'jimdo-dolphin-what-is-jimdo-dolphin': 'jimdo-dolphin',
   'bookmark-aida-what-is-bookmark-aida': 'bookmark-aida',
   'teleporthq-what-is-teleporthq': 'teleporthq',
+  // AI Data Analytics
   'tableau-ai-what-is-tableau-ai': 'tableau-ai',
   'power-bi-copilot-what-is-power-bi-copilot': 'power-bi-copilot',
   'julius-ai-what-is-julius-ai': 'julius-ai',
