@@ -1,0 +1,20 @@
+Web Design Tools (8 remaining):
+- Webflow AI
+- Wix ADI
+- 10Web AI Builder
+- Durable AI
+- Hostinger AI Builder
+- Jimdo Dolphin
+- Bookmark AiDA
+- TeleportHQ
+
+Data Analytics Tools (9 total):
+- Tableau AI
+- Power BI Copilot
+- Julius AI
+- Polymer
+- MonkeyLearn
+- DataRobot
+- Akkio
+- Looker Studio AI
+- Obviously AI
