@@ -64,14 +64,15 @@ export function ToolCard({ tool, infoPageUrl }: ToolCardProps) {
             </Button>
           )}
           {effectiveInfoUrl && (
-            <Link href={effectiveInfoUrl} className="flex-1">
-              <Button
-                variant="outline"
-                className="w-full font-semibold transition-transform hover:scale-105"
-              >
+            <Button
+              variant="outline"
+              asChild
+              className="flex-1 font-semibold transition-transform hover:scale-105"
+            >
+              <Link href={effectiveInfoUrl}>
                 More Info
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
       </CardContent>
