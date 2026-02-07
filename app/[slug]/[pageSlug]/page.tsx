@@ -10,7 +10,7 @@ import { Home } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{
-    entitySlug: string
+    slug: string
     pageSlug: string
   }>
 }
@@ -18,13 +18,13 @@ interface PageProps {
 export const revalidate = 604800 // Revalidate every 7 days
 
 export default async function DynamicAboutPage({ params }: PageProps) {
-  const { entitySlug, pageSlug } = await params
+  const { slug, pageSlug } = await params
 
   // First, try to find a tool with this slug
   const { data: tool } = await supabaseAdmin
     .from('tools')
     .select('*')
-    .eq('slug', entitySlug)
+    .eq('slug', slug)
     .single()
 
   const typedTool = tool as Tool | null
@@ -155,7 +155,7 @@ export default async function DynamicAboutPage({ params }: PageProps) {
   const { data: category } = await supabaseAdmin
     .from('categories')
     .select('*')
-    .eq('slug', entitySlug)
+    .eq('slug', slug)
     .single()
 
   const typedCategory = category as Category | null
@@ -276,7 +276,7 @@ export default async function DynamicAboutPage({ params }: PageProps) {
 
 // Generate static params for all known tool and category pages
 export async function generateStaticParams() {
-  const params: { entitySlug: string; pageSlug: string }[] = []
+  const params: { slug: string; pageSlug: string }[] = []
 
   // Get all tools with their slugs and IDs
   const { data: tools } = await supabaseAdmin
@@ -296,7 +296,7 @@ export async function generateStaticParams() {
       const tool = toolsTyped.find(t => t.id === toolPage.tool_id)
       if (tool) {
         params.push({
-          entitySlug: tool.slug,
+          slug: tool.slug,
           pageSlug: toolPage.slug,
         })
       }
@@ -321,7 +321,7 @@ export async function generateStaticParams() {
       const category = categoriesTyped.find(c => c.id === categoryPage.category_id)
       if (category) {
         params.push({
-          entitySlug: category.slug,
+          slug: category.slug,
           pageSlug: categoryPage.slug,
         })
       }
