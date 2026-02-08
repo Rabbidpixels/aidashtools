@@ -1,35 +1,15 @@
-'use client'
-
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import type { Tool } from '@/lib/database.types'
+import { TryToolButton } from '@/components/try-tool-button'
 
 interface ToolCardProps {
   tool: Tool
-  infoPageUrl?: string | null // URL to the tool's info page (from tool_pages or manual info_link)
+  infoPageUrl?: string | null
 }
 
 export function ToolCard({ tool, infoPageUrl }: ToolCardProps) {
-  const handleTryClick = async () => {
-    if (!tool.link) return
-
-    // Track the click (fire and forget)
-    fetch('/api/track-click', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ toolId: tool.id }),
-    }).catch((error) => {
-      console.error('Failed to track click:', error)
-    })
-
-    // Open the link
-    window.open(tool.link, '_blank', 'noopener,noreferrer')
-  }
-
-  // Determine the info URL - manual override takes precedence
   const effectiveInfoUrl = tool.info_link || infoPageUrl
 
   return (
@@ -42,7 +22,7 @@ export function ToolCard({ tool, infoPageUrl }: ToolCardProps) {
     >
       {tool.featured && (
         <span className="absolute top-4 right-4 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold uppercase">
-          ⭐ Featured
+          <span aria-hidden="true">&#11088; </span>Featured
         </span>
       )}
       <CardContent className="p-6 flex-1 flex flex-col">
@@ -56,18 +36,13 @@ export function ToolCard({ tool, infoPageUrl }: ToolCardProps) {
         </div>
         <div className="mt-auto flex gap-2">
           {tool.link && (
-            <Button
-              onClick={handleTryClick}
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-transform hover:scale-105"
-            >
-              Try →
-            </Button>
+            <TryToolButton toolId={tool.id} toolLink={tool.link} toolName={tool.name} />
           )}
           {effectiveInfoUrl && (
             <Button
               variant="outline"
               asChild
-              className="flex-1 font-semibold transition-transform hover:scale-105"
+              className="flex-1 font-semibold"
             >
               <Link href={effectiveInfoUrl}>
                 More Info

@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import type { Page } from '@/lib/database.types'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
@@ -14,6 +15,36 @@ interface PageProps {
 }
 
 export const revalidate = 86400 // Revalidate every 24 hours
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+
+  const { data: page } = await supabaseAdmin
+    .from('pages')
+    .select('title, content')
+    .eq('slug', slug)
+    .single()
+
+  if (!page) return {}
+
+  const description = (page as { title: string; content: string }).content
+    .replace(/[#*_\[\]()]/g, '')
+    .substring(0, 160)
+    .trim()
+
+  return {
+    title: (page as { title: string; content: string }).title,
+    description,
+    alternates: {
+      canonical: `https://aidashtools.com/${slug}`,
+    },
+    openGraph: {
+      title: (page as { title: string; content: string }).title,
+      description,
+      url: `https://aidashtools.com/${slug}`,
+    },
+  }
+}
 
 export default async function DynamicPage({ params }: PageProps) {
   const { slug } = await params
@@ -34,13 +65,13 @@ export default async function DynamicPage({ params }: PageProps) {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <div className="container mx-auto px-4 py-16 max-w-4xl">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-4 w-4" aria-hidden="true" />
             Back to Home
           </Link>
 

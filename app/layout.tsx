@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script'
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider'
 
@@ -37,6 +38,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  alternates: {
+    canonical: 'https://aidashtools.com',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -46,7 +50,7 @@ export const metadata: Metadata = {
     siteName: 'AidashTools',
     images: [
       {
-        url: '/robot.png',
+        url: 'https://aidashtools.com/robot.png',
         width: 400,
         height: 400,
         alt: 'AidashTools AI Robot',
@@ -57,10 +61,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'AidashTools - Discover the Best AI Tools Directory',
     description: 'Discover the most powerful AI tools for chatbots, image generation, video creation, and more.',
-    images: ['/robot.png'],
-  },
-  verification: {
-    google: 'your-google-verification-code',
+    images: [{ url: 'https://aidashtools.com/robot.png', alt: 'AidashTools AI Robot' }],
   },
 };
 
@@ -71,14 +72,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7675327870485351"
-          crossOrigin="anonymous"
-        />
-      </head>
+      <head />
       <body>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none">
+          Skip to content
+        </a>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -87,7 +85,46 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7675327870485351"
+          strategy="lazyOnload"
+          crossOrigin="anonymous"
+        />
+        <JsonLd />
       </body>
     </html>
   );
+}
+
+function JsonLd() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://aidashtools.com/#website',
+        url: 'https://aidashtools.com',
+        name: 'AidashTools',
+        description: 'Discover the most powerful AI tools for chatbots, image generation, video creation, music production, programming, web design, and data analytics.',
+        publisher: { '@id': 'https://aidashtools.com/#organization' },
+      },
+      {
+        '@type': 'Organization',
+        '@id': 'https://aidashtools.com/#organization',
+        name: 'AidashTools',
+        url: 'https://aidashtools.com',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://aidashtools.com/robot.png',
+        },
+      },
+    ],
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
 }

@@ -23,7 +23,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
   }
 
   return (
-    <nav className="bg-card border-b border-border sticky top-0 z-40 shadow-sm">
+    <nav aria-label="Tool categories" className="bg-card border-b border-border sticky top-[73px] z-40 shadow-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex flex-wrap gap-2 justify-center">
           {categories.map((category) => (

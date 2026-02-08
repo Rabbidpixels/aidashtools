@@ -10,8 +10,8 @@ export function Header({ showAdminLink = false }: HeaderProps) {
     <header className="bg-card border-b border-border sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 py-5">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-3xl font-bold text-foreground hover:opacity-90 transition-opacity">
-            AI <span className="text-primary">Dashboard</span>
+          <Link href="/" className="text-3xl font-bold text-foreground hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm">
+            Aidash<span className="text-primary">Tools</span>
           </Link>
 
           <div className="flex items-center gap-4">

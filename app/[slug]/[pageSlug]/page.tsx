@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import type { ToolPage, Tool, CategoryPage, Category } from '@/lib/database.types'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
@@ -17,26 +18,116 @@ interface PageProps {
 
 export const revalidate = 604800 // Revalidate every 7 days
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug, pageSlug } = await params
+
+  // Try tool first
+  const { data: tool } = await supabaseAdmin
+    .from('tools')
+    .select('id, name, slug')
+    .eq('slug', slug)
+    .single()
+
+  if (tool) {
+    const typedTool = tool as { id: string; name: string; slug: string }
+    const { data: toolPage } = await supabaseAdmin
+      .from('tool_pages')
+      .select('title, content')
+      .eq('tool_id', typedTool.id)
+      .eq('slug', pageSlug)
+      .single()
+
+    if (toolPage) {
+      const tp = toolPage as { title: string; content: string }
+      const description = tp.content
+        .replace(/[#*_\[\]()]/g, '')
+        .substring(0, 160)
+        .trim()
+
+      return {
+        title: tp.title,
+        description,
+        alternates: {
+          canonical: `https://aidashtools.com/${slug}/${pageSlug}`,
+        },
+        openGraph: {
+          title: tp.title,
+          description,
+          url: `https://aidashtools.com/${slug}/${pageSlug}`,
+        },
+      }
+    }
+  }
+
+  // Try category
+  const { data: category } = await supabaseAdmin
+    .from('categories')
+    .select('id, name, slug')
+    .eq('slug', slug)
+    .single()
+
+  if (category) {
+    const typedCategory = category as { id: string; name: string; slug: string }
+    const { data: categoryPage } = await supabaseAdmin
+      .from('category_pages')
+      .select('title, content')
+      .eq('category_id', typedCategory.id)
+      .eq('slug', pageSlug)
+      .single()
+
+    if (categoryPage) {
+      const cp = categoryPage as { title: string; content: string }
+      const description = cp.content
+        .replace(/[#*_\[\]()]/g, '')
+        .substring(0, 160)
+        .trim()
+
+      return {
+        title: cp.title,
+        description,
+        alternates: {
+          canonical: `https://aidashtools.com/${slug}/${pageSlug}`,
+        },
+        openGraph: {
+          title: cp.title,
+          description,
+          url: `https://aidashtools.com/${slug}/${pageSlug}`,
+        },
+      }
+    }
+  }
+
+  return {}
+}
+
 export default async function DynamicAboutPage({ params }: PageProps) {
   const { slug, pageSlug } = await params
 
-  // First, try to find a tool with this slug
-  const { data: tool } = await supabaseAdmin
-    .from('tools')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+  // Try to find tool and category in parallel
+  const [{ data: tool }, { data: category }] = await Promise.all([
+    supabaseAdmin.from('tools').select('*').eq('slug', slug).single(),
+    supabaseAdmin.from('categories').select('*').eq('slug', slug).single(),
+  ])
 
   const typedTool = tool as Tool | null
 
   if (typedTool) {
-    // Found a tool, now look for the tool page
-    const { data: toolPage } = await supabaseAdmin
-      .from('tool_pages')
-      .select('*')
-      .eq('tool_id', typedTool.id)
-      .eq('slug', pageSlug)
-      .single()
+    // Found a tool, fetch tool page and related data in parallel
+    const [{ data: toolPage }, { data: relatedToolsData }] = await Promise.all([
+      supabaseAdmin
+        .from('tool_pages')
+        .select('*')
+        .eq('tool_id', typedTool.id)
+        .eq('slug', pageSlug)
+        .single(),
+      supabaseAdmin
+        .from('tools')
+        .select('*')
+        .eq('category_id', typedTool.category_id)
+        .eq('visible', true)
+        .neq('id', typedTool.id)
+        .limit(10),
+    ])
 
     const typedToolPage = toolPage as ToolPage | null
 
@@ -44,25 +135,18 @@ export default async function DynamicAboutPage({ params }: PageProps) {
       notFound()
     }
 
-    // Fetch other tools from the same category (excluding current tool)
-    const { data: relatedToolsData } = await supabaseAdmin
-      .from('tools')
-      .select('*')
-      .eq('category_id', typedTool.category_id)
-      .eq('visible', true)
-      .neq('id', typedTool.id)
-      .limit(10)
-
     const allRelatedTools = (relatedToolsData || []) as Tool[]
-
-    // Shuffle and pick 3 random tools
     const shuffled = allRelatedTools.sort(() => Math.random() - 0.5)
     const relatedTools = shuffled.slice(0, 3)
 
-    // Fetch tool pages for related tools to get info URLs
-    const { data: relatedToolPages } = await supabaseAdmin
-      .from('tool_pages')
-      .select('tool_id, slug')
+    // Fetch tool pages only for related tools
+    const relatedToolIds = relatedTools.map(t => t.id)
+    const { data: relatedToolPages } = relatedToolIds.length > 0
+      ? await supabaseAdmin
+          .from('tool_pages')
+          .select('tool_id, slug')
+          .in('tool_id', relatedToolIds)
+      : { data: [] }
 
     const relatedToolPageMap = new Map<string, string>()
     if (relatedToolPages) {
@@ -74,17 +158,30 @@ export default async function DynamicAboutPage({ params }: PageProps) {
       }
     }
 
+    const toolJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: typedTool.name,
+      description: typedTool.description,
+      url: typedTool.link,
+      applicationCategory: 'Artificial Intelligence',
+    }
+
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
 
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(toolJsonLd) }}
+          />
           <div className="container mx-auto px-4 py-16 max-w-4xl">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
             >
-              <Home className="h-4 w-4" />
+              <Home className="h-4 w-4" aria-hidden="true" />
               Back to Home
             </Link>
 
@@ -101,7 +198,7 @@ export default async function DynamicAboutPage({ params }: PageProps) {
                     rel="noopener noreferrer"
                     className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
                   >
-                    Visit Tool →
+                    Visit Tool <span aria-hidden="true">&rarr;</span>
                   </a>
                 )}
               </div>
@@ -128,7 +225,6 @@ export default async function DynamicAboutPage({ params }: PageProps) {
               <p>Last updated: {new Date(typedToolPage.updated_at).toLocaleDateString()}</p>
             </div>
 
-            {/* Related Tools Section */}
             {relatedTools.length > 0 && (
               <div className="mt-16 pt-8 border-t border-border">
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Related Tools</h2>
@@ -151,23 +247,26 @@ export default async function DynamicAboutPage({ params }: PageProps) {
     )
   }
 
-  // Not a tool, try to find a category
-  const { data: category } = await supabaseAdmin
-    .from('categories')
-    .select('*')
-    .eq('slug', slug)
-    .single()
-
+  // Not a tool, try category
   const typedCategory = category as Category | null
 
   if (typedCategory) {
-    // Found a category, now look for the category page
-    const { data: categoryPage } = await supabaseAdmin
-      .from('category_pages')
-      .select('*')
-      .eq('category_id', typedCategory.id)
-      .eq('slug', pageSlug)
-      .single()
+    const [{ data: categoryPage }, { data: categoryToolsData }] = await Promise.all([
+      supabaseAdmin
+        .from('category_pages')
+        .select('*')
+        .eq('category_id', typedCategory.id)
+        .eq('slug', pageSlug)
+        .single(),
+      supabaseAdmin
+        .from('tools')
+        .select('*')
+        .eq('category_id', typedCategory.id)
+        .eq('visible', true)
+        .order('featured', { ascending: false })
+        .order('display_order', { ascending: true })
+        .order('name', { ascending: true }),
+    ])
 
     const typedCategoryPage = categoryPage as CategoryPage | null
 
@@ -175,29 +274,22 @@ export default async function DynamicAboutPage({ params }: PageProps) {
       notFound()
     }
 
-    // Fetch all visible tools in this category
-    const { data: categoryToolsData } = await supabaseAdmin
-      .from('tools')
-      .select('*')
-      .eq('category_id', typedCategory.id)
-      .eq('visible', true)
-      .order('featured', { ascending: false })
-      .order('display_order', { ascending: true })
-      .order('name', { ascending: true })
-
     const categoryTools = (categoryToolsData || []) as Tool[]
 
-    // Fetch tool pages for category tools to get info URLs
-    const { data: categoryToolPages } = await supabaseAdmin
-      .from('tool_pages')
-      .select('tool_id, slug')
+    const categoryToolIds = categoryTools.map(t => t.id)
+    const { data: categoryToolPages } = categoryToolIds.length > 0
+      ? await supabaseAdmin
+          .from('tool_pages')
+          .select('tool_id, slug')
+          .in('tool_id', categoryToolIds)
+      : { data: [] }
 
     const categoryToolPageMap = new Map<string, string>()
     if (categoryToolPages) {
       for (const tp of categoryToolPages as { tool_id: string; slug: string }[]) {
-        const tool = categoryTools.find(t => t.id === tp.tool_id)
-        if (tool) {
-          categoryToolPageMap.set(tp.tool_id, `/${tool.slug}/${tp.slug}`)
+        const t = categoryTools.find(tool => tool.id === tp.tool_id)
+        if (t) {
+          categoryToolPageMap.set(tp.tool_id, `/${t.slug}/${tp.slug}`)
         }
       }
     }
@@ -206,13 +298,13 @@ export default async function DynamicAboutPage({ params }: PageProps) {
       <div className="min-h-screen flex flex-col">
         <Header />
 
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
           <div className="container mx-auto px-4 py-16 max-w-4xl">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
             >
-              <Home className="h-4 w-4" />
+              <Home className="h-4 w-4" aria-hidden="true" />
               Back to Home
             </Link>
 
@@ -247,16 +339,15 @@ export default async function DynamicAboutPage({ params }: PageProps) {
               <p>Last updated: {new Date(typedCategoryPage.updated_at).toLocaleDateString()}</p>
             </div>
 
-            {/* Tools in this Category */}
             {categoryTools.length > 0 && (
               <div className="mt-16 pt-8 border-t border-border">
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Tools in {typedCategory.name}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {categoryTools.map((tool) => (
+                  {categoryTools.map((t) => (
                     <ToolCard
-                      key={tool.id}
-                      tool={tool}
-                      infoPageUrl={categoryToolPageMap.get(tool.id)}
+                      key={t.id}
+                      tool={t}
+                      infoPageUrl={categoryToolPageMap.get(t.id)}
                     />
                   ))}
                 </div>
@@ -270,60 +361,39 @@ export default async function DynamicAboutPage({ params }: PageProps) {
     )
   }
 
-  // Neither tool nor category found
   notFound()
 }
 
-// Generate static params for all known tool and category pages
 export async function generateStaticParams() {
   const params: { slug: string; pageSlug: string }[] = []
 
-  // Get all tools with their slugs and IDs
-  const { data: tools } = await supabaseAdmin
-    .from('tools')
-    .select('id, slug')
-
-  // Get all tool pages
-  const { data: toolPages } = await supabaseAdmin
-    .from('tool_pages')
-    .select('slug, tool_id')
+  const [{ data: tools }, { data: toolPages }, { data: categories }, { data: categoryPages }] = await Promise.all([
+    supabaseAdmin.from('tools').select('id, slug'),
+    supabaseAdmin.from('tool_pages').select('slug, tool_id'),
+    supabaseAdmin.from('categories').select('id, slug'),
+    supabaseAdmin.from('category_pages').select('slug, category_id'),
+  ])
 
   if (tools && toolPages) {
     const toolsTyped = tools as { id: string; slug: string }[]
     const toolPagesTyped = toolPages as { slug: string; tool_id: string }[]
 
     for (const toolPage of toolPagesTyped) {
-      const tool = toolsTyped.find(t => t.id === toolPage.tool_id)
-      if (tool) {
-        params.push({
-          slug: tool.slug,
-          pageSlug: toolPage.slug,
-        })
+      const t = toolsTyped.find(tool => tool.id === toolPage.tool_id)
+      if (t) {
+        params.push({ slug: t.slug, pageSlug: toolPage.slug })
       }
     }
   }
-
-  // Get all categories with their slugs and IDs
-  const { data: categories } = await supabaseAdmin
-    .from('categories')
-    .select('id, slug')
-
-  // Get all category pages
-  const { data: categoryPages } = await supabaseAdmin
-    .from('category_pages')
-    .select('slug, category_id')
 
   if (categories && categoryPages) {
     const categoriesTyped = categories as { id: string; slug: string }[]
     const categoryPagesTyped = categoryPages as { slug: string; category_id: string }[]
 
     for (const categoryPage of categoryPagesTyped) {
-      const category = categoriesTyped.find(c => c.id === categoryPage.category_id)
-      if (category) {
-        params.push({
-          slug: category.slug,
-          pageSlug: categoryPage.slug,
-        })
+      const cat = categoriesTyped.find(c => c.id === categoryPage.category_id)
+      if (cat) {
+        params.push({ slug: cat.slug, pageSlug: categoryPage.slug })
       }
     }
   }

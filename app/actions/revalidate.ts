@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 // Helper to check Supabase configuration
 function checkSupabaseConfig() {
@@ -9,6 +10,31 @@ function checkSupabaseConfig() {
     return { success: false, error: 'Server not configured: Missing SUPABASE_SERVICE_ROLE_KEY environment variable. Please add it to Vercel environment variables.' }
   }
   return null
+}
+
+// Helper to validate admin auth in server actions
+async function requireAdmin() {
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail) {
+    return { success: false, error: 'Server not configured: Missing ADMIN_EMAIL' }
+  }
+
+  try {
+    const supabase = await createServerClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: Not authenticated' }
+    }
+
+    if (user.email !== adminEmail) {
+      return { success: false, error: 'Forbidden: Not an admin user' }
+    }
+
+    return null // Auth passed
+  } catch {
+    return { success: false, error: 'Authentication failed' }
+  }
 }
 
 export async function revalidatePagePath(slug: string) {
@@ -21,14 +47,11 @@ export async function revalidateHomePage() {
   return { success: true }
 }
 
-// Simple test action to verify server actions work
-export async function testServerAction() {
-  console.log('[testServerAction] Called!')
-  return { success: true, message: 'Server action works!' }
-}
-
 // Tool actions using admin client (bypasses RLS)
 export async function toggleToolFeatured(toolId: string, currentValue: boolean) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -52,6 +75,9 @@ export async function toggleToolFeatured(toolId: string, currentValue: boolean) 
 }
 
 export async function toggleToolVisibility(toolId: string, currentValue: boolean) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -75,6 +101,9 @@ export async function toggleToolVisibility(toolId: string, currentValue: boolean
 }
 
 export async function updatePage(pageId: string, slug: string, data: { title: string; content: string }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -103,16 +132,13 @@ export async function updatePage(pageId: string, slug: string, data: { title: st
 
 // Tool Page CRUD actions
 export async function createToolPage(data: { tool_id: string; slug: string; title: string; content: string }) {
-  console.log('[createToolPage] Starting with data:', { tool_id: data.tool_id, slug: data.slug, title: data.title })
+  const authError = await requireAdmin()
+  if (authError) return authError
 
   const configError = checkSupabaseConfig()
-  if (configError) {
-    console.log('[createToolPage] Config error:', configError)
-    return configError
-  }
+  if (configError) return configError
 
   try {
-    console.log('[createToolPage] Inserting into database...')
     const { error } = await supabaseAdmin
       .from('tool_pages')
       .insert({
@@ -122,16 +148,12 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
         content: data.content,
       })
 
-    console.log('[createToolPage] Insert result:', error ? 'error' : 'success')
-
     if (error) {
       console.error('[createToolPage] Error:', error)
       return { success: false, error: error.message }
     }
 
-    console.log('[createToolPage] Revalidating...')
     revalidatePath('/admin/tool-pages')
-    console.log('[createToolPage] Done!')
     return { success: true }
   } catch (err) {
     console.error('[createToolPage] Exception:', err)
@@ -140,6 +162,9 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
 }
 
 export async function updateToolPage(pageId: string, slug: string, data: { tool_id: string; slug: string; title: string; content: string }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -181,6 +206,9 @@ export async function updateToolPage(pageId: string, slug: string, data: { tool_
 }
 
 export async function deleteToolPage(pageId: string) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -205,6 +233,9 @@ export async function deleteToolPage(pageId: string) {
 
 // Category Page CRUD actions
 export async function createCategoryPage(data: { category_id: string; slug: string; title: string; content: string }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -232,6 +263,9 @@ export async function createCategoryPage(data: { category_id: string; slug: stri
 }
 
 export async function updateCategoryPage(pageId: string, slug: string, data: { category_id: string; slug: string; title: string; content: string }) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -273,6 +307,9 @@ export async function updateCategoryPage(pageId: string, slug: string, data: { c
 }
 
 export async function deleteCategoryPage(pageId: string) {
+  const authError = await requireAdmin()
+  if (authError) return authError
+
   const configError = checkSupabaseConfig()
   if (configError) return configError
 
@@ -297,19 +334,14 @@ export async function deleteCategoryPage(pageId: string) {
 
 // Settings actions
 export async function updateSettings(settings: { key: string; value: string }[]) {
-  console.log('[updateSettings] Starting with', settings.length, 'settings')
+  const authError = await requireAdmin()
+  if (authError) return authError
 
   const configError = checkSupabaseConfig()
-  if (configError) {
-    console.log('[updateSettings] Config error:', configError)
-    return configError
-  }
+  if (configError) return configError
 
   try {
     for (const setting of settings) {
-      console.log('[updateSettings] Processing setting:', setting.key)
-      // First try to update existing setting
-      console.log('[updateSettings] Checking if setting exists...')
       const { data: existing, error: selectError } = await supabaseAdmin
         .from('settings')
         .select('id')
@@ -321,26 +353,18 @@ export async function updateSettings(settings: { key: string; value: string }[])
         return { success: false, error: selectError.message }
       }
 
-      console.log('[updateSettings] Setting exists:', !!existing)
-
       let error
       if (existing) {
-        // Update existing
-        console.log('[updateSettings] Updating existing setting...')
         const result = await supabaseAdmin
           .from('settings')
           .update({ value: setting.value, updated_at: new Date().toISOString() })
           .eq('key', setting.key)
         error = result.error
-        console.log('[updateSettings] Update result:', error ? 'error' : 'success')
       } else {
-        // Insert new
-        console.log('[updateSettings] Inserting new setting...')
         const result = await supabaseAdmin
           .from('settings')
           .insert({ key: setting.key, value: setting.value })
         error = result.error
-        console.log('[updateSettings] Insert result:', error ? 'error' : 'success')
       }
 
       if (error) {
@@ -349,9 +373,7 @@ export async function updateSettings(settings: { key: string; value: string }[])
       }
     }
 
-    console.log('[updateSettings] All settings processed, revalidating...')
     revalidatePath('/')
-    console.log('[updateSettings] Done!')
     return { success: true }
   } catch (err) {
     console.error('Exception in updateSettings:', err)

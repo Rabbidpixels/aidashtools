@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { validateAdminAuth } from '@/lib/auth'
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -68,137 +69,71 @@ const toolSlugMappings: Record<string, string> = {
 }
 
 export async function GET() {
+  // Require admin authentication
+  const authResult = await validateAdminAuth()
+  if (authResult.error) {
+    return authResult.error
+  }
+
+  if (!isSupabaseAdminConfigured()) {
+    return NextResponse.json({ success: false, error: 'Server not configured' }, { status: 500 })
+  }
+
   const logs: string[] = []
 
   try {
-    logs.push('🚀 Starting bulk import of tool pages...')
+    logs.push('Starting bulk import of tool pages...')
 
-    const supabase = await createClient()
-
-    // Get all tools from database
-    const { data: tools, error: toolsError } = await supabase
+    const { data: tools, error: toolsError } = await supabaseAdmin
       .from('tools')
       .select('id, name, slug')
 
     if (toolsError) {
-      logs.push(`❌ Error fetching tools: ${toolsError.message}`)
       return NextResponse.json({ success: false, logs, error: toolsError.message })
     }
 
-    logs.push(`✓ Found ${tools?.length || 0} tools in database`)
+    const toolMap = new Map(tools?.map((t: { slug: string; id: string; name: string }) => [t.slug, t]) || [])
 
-    // Create a map of tool slugs to tool IDs
-    const toolMap = new Map(tools?.map(t => [t.slug, t]) || [])
-
-    // Read all markdown files from tool-pages directory
     const toolPagesDir = path.join(process.cwd(), 'tool-pages')
     const files = fs.readdirSync(toolPagesDir)
-      .filter(f => f.endsWith('.md') && !f.startsWith('_'))
-
-    logs.push(`📄 Found ${files.length} markdown files to import`)
+      .filter((f: string) => f.endsWith('.md') && !f.startsWith('_'))
 
     let successCount = 0
     let skipCount = 0
     let errorCount = 0
-    const importedTools: string[] = []
-    const skippedTools: string[] = []
-    const errors: string[] = []
 
     for (const file of files) {
       const filename = path.basename(file, '.md')
       const content = fs.readFileSync(path.join(toolPagesDir, file), 'utf-8')
 
-      // Extract title from first line (should be # What is ...)
       const titleMatch = content.match(/^#\s+(.+)$/m)
       const title = titleMatch ? titleMatch[1] : `What is ${filename}?`
 
-      // Get tool slug from mapping
       const toolSlug = toolSlugMappings[filename]
+      if (!toolSlug) { skipCount++; continue }
 
-      if (!toolSlug) {
-        logs.push(`⚠️ Skipping ${filename} - no slug mapping found`)
-        skippedTools.push(filename)
-        skipCount++
-        continue
-      }
+      const tool = toolMap.get(toolSlug) as { id: string; name: string; slug: string } | undefined
+      if (!tool) { skipCount++; continue }
 
-      const tool = toolMap.get(toolSlug)
-
-      if (!tool) {
-        logs.push(`⚠️ Skipping ${filename} - tool '${toolSlug}' not found in database`)
-        skippedTools.push(`${filename} (tool not found)`)
-        skipCount++
-        continue
-      }
-
-      // Check if page already exists
-      const { data: existingPage } = await supabase
+      const { data: existingPage } = await supabaseAdmin
         .from('tool_pages')
         .select('id')
         .eq('tool_id', tool.id)
         .single()
 
-      if (existingPage) {
-        logs.push(`⏭️ Skipping ${tool.name} - page already exists`)
-        skippedTools.push(`${tool.name} (already exists)`)
-        skipCount++
-        continue
-      }
+      if (existingPage) { skipCount++; continue }
 
-      // Create the page slug (e.g., "what-is-claude")
-      const pageSlug = filename
-
-      // Insert the tool page
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseAdmin
         .from('tool_pages')
-        .insert({
-          tool_id: tool.id,
-          slug: pageSlug,
-          title: title,
-          content: content
-        })
+        .insert({ tool_id: tool.id, slug: filename, title, content })
 
-      if (insertError) {
-        logs.push(`❌ Error importing ${tool.name}: ${insertError.message}`)
-        errors.push(`${tool.name}: ${insertError.message}`)
-        errorCount++
-      } else {
-        logs.push(`✅ Imported: ${tool.name} (/${tool.slug}/${pageSlug})`)
-        importedTools.push(tool.name)
-        successCount++
-      }
+      if (insertError) { errorCount++ } else { successCount++ }
     }
 
-    logs.push('')
-    logs.push('='.repeat(60))
-    logs.push('📊 Import Summary:')
-    logs.push('='.repeat(60))
-    logs.push(`✅ Successfully imported: ${successCount} pages`)
-    logs.push(`⏭️ Skipped: ${skipCount} pages`)
-    logs.push(`❌ Errors: ${errorCount} pages`)
-    logs.push('='.repeat(60))
-
-    if (successCount > 0) {
-      logs.push('')
-      logs.push('🎉 Import complete! Visit /admin/tool-pages to see your pages.')
-    }
-
-    return NextResponse.json({
-      success: true,
-      logs,
-      summary: {
-        successCount,
-        skipCount,
-        errorCount,
-        importedTools,
-        skippedTools,
-        errors
-      }
-    })
-
+    logs.push(`Imported: ${successCount}, Skipped: ${skipCount}, Errors: ${errorCount}`)
+    return NextResponse.json({ success: true, logs, summary: { successCount, skipCount, errorCount } })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logs.push(`❌ Fatal error: ${errorMessage}`)
-    return NextResponse.json({ success: false, logs, error: errorMessage }, { status: 500 })
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
 }

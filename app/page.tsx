@@ -107,7 +107,7 @@ export default async function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 relative">
+      <main id="main-content" className="flex-1 relative">
         {/* Left Skyscraper Ad */}
         <aside className="hidden xl:block fixed left-0 top-32 w-40 h-[600px] z-30">
           <AdPlacement location="left-skyscraper" ad={adMap.get('left-skyscraper')} />
@@ -133,7 +133,7 @@ export default async function Home() {
               <div className="flex-shrink-0 max-w-xs md:max-w-sm relative order-1 md:order-2">
                 <Image
                   src="/robot.png"
-                  alt="AI Robot"
+                  alt="AidashTools mascot - AI tools directory robot"
                   width={400}
                   height={400}
                   className="w-full h-auto drop-shadow-2xl animate-float"
