@@ -1,19 +1,28 @@
 import { supabaseAdmin } from '@/lib/supabase'
+import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
+
+const getFooterSettings = unstable_cache(
+  async () => {
+    const { data: settings } = await supabaseAdmin
+      .from('settings')
+      .select('key, value')
+      .in('key', ['footer_copyright', 'footer_disclosure', 'footer_tiktok_url', 'footer_facebook_url'])
+
+    const settingsMap: Record<string, string> = {}
+    settings?.forEach((setting: { key: string; value: string }) => {
+      settingsMap[setting.key] = setting.value || ''
+    })
+    return settingsMap
+  },
+  ['footer-settings'],
+  { revalidate: 86400, tags: ['footer-settings'] }
+)
 
 export async function Footer() {
   const currentYear = new Date().getFullYear()
 
-  // Fetch footer settings
-  const { data: settings } = await supabaseAdmin
-    .from('settings')
-    .select('*')
-    .in('key', ['footer_copyright', 'footer_disclosure', 'footer_tiktok_url', 'footer_facebook_url'])
-
-  const settingsMap: Record<string, string> = {}
-  settings?.forEach((setting: any) => {
-    settingsMap[setting.key] = setting.value || ''
-  })
+  const settingsMap = await getFooterSettings()
 
   const copyright = settingsMap.footer_copyright || `© ${currentYear} AI Dashboard. Site created by RabbidPixelsLLC. All rights reserved.`
   const disclosure = settingsMap.footer_disclosure || 'Some links on this website are affiliate links. This means we may earn a commission if you click on the link and make a purchase, at no additional cost to you.'

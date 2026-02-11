@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 
@@ -154,6 +154,7 @@ export async function createToolPage(data: { tool_id: string; slug: string; titl
     }
 
     revalidatePath('/admin/tool-pages')
+    revalidatePath('/') // New tool page means new "More Info" button on homepage
     return { success: true }
   } catch (err) {
     console.error('[createToolPage] Exception:', err)
@@ -224,6 +225,7 @@ export async function deleteToolPage(pageId: string) {
     }
 
     revalidatePath('/admin/tool-pages')
+    revalidatePath('/') // Deleted tool page removes "More Info" button from homepage
     return { success: true }
   } catch (err) {
     console.error('Exception in deleteToolPage:', err)
@@ -255,6 +257,7 @@ export async function createCategoryPage(data: { category_id: string; slug: stri
     }
 
     revalidatePath('/admin/category-pages')
+    revalidatePath('/') // New category page means new "More Info" button on homepage
     return { success: true }
   } catch (err) {
     console.error('Exception in createCategoryPage:', err)
@@ -325,6 +328,7 @@ export async function deleteCategoryPage(pageId: string) {
     }
 
     revalidatePath('/admin/category-pages')
+    revalidatePath('/') // Deleted category page removes "More Info" button from homepage
     return { success: true }
   } catch (err) {
     console.error('Exception in deleteCategoryPage:', err)
@@ -374,6 +378,7 @@ export async function updateSettings(settings: { key: string; value: string }[])
     }
 
     revalidatePath('/')
+    revalidateTag('footer-settings') // Bust cached footer settings
     return { success: true }
   } catch (err) {
     console.error('Exception in updateSettings:', err)

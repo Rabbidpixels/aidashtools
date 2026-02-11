@@ -1,6 +1,9 @@
 import { MetadataRoute } from 'next'
 import { supabaseAdmin } from '@/lib/supabase'
 
+// Cache sitemap for 24 hours - crawlers don't need real-time updates
+export const revalidate = 86400
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://aidashtools.com'
 

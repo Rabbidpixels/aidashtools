@@ -14,7 +14,7 @@ interface PageProps {
   }>
 }
 
-export const revalidate = 86400 // Revalidate every 24 hours
+export const revalidate = 604800 // Revalidate every 7 days - static pages (terms, privacy, etc.) rarely change
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params

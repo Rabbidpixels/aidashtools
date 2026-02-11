@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
     const identifier = `track-click:${ip}`
 
     if (!checkRateLimit(identifier)) {
-      console.warn('Rate limit exceeded for:', ip)
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
@@ -41,36 +40,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { toolId } = body
 
-    console.log('Track click request received:', { toolId, ip })
-
     if (!toolId) {
-      console.error('No toolId provided')
       return NextResponse.json(
         { error: 'Tool ID is required' },
         { status: 400 }
       )
     }
 
-    // Insert click record
-    const { data, error } = await supabaseAdmin
+    // Insert click record - no .select() needed, saves a round-trip
+    const { error } = await supabaseAdmin
       .from('tool_clicks')
       .insert({ tool_id: toolId })
-      .select()
 
     if (error) {
-      console.error('Supabase error tracking click:', error)
+      console.error('Failed to track click:', error.message)
       return NextResponse.json(
-        { error: 'Failed to track click', details: error.message },
+        { error: 'Failed to track click' },
         { status: 500 }
       )
     }
 
-    console.log('Click tracked successfully:', data)
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error in track-click API:', error)
+    console.error('track-click error:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

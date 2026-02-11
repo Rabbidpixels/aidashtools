@@ -8,8 +8,8 @@ import type { Category, Tool, ToolPage, CategoryPage, Ad } from '@/lib/database.
 import Image from 'next/image'
 import Link from 'next/link'
 
-// Cache homepage for 1 hour - allows new tool pages to show "More Info" buttons reasonably quickly
-export const revalidate = 3600
+// Cache homepage for 24 hours - admin mutations trigger on-demand revalidation via revalidatePath('/')
+export const revalidate = 86400
 
 export default async function Home() {
   // Optimized: Fetch all data in parallel with minimal queries
