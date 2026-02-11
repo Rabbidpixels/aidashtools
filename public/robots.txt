@@ -7,8 +7,6 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /login
 Disallow: /unauthorized
-Disallow: /test-env
-Disallow: /_next/
 Disallow: /_vercel/
 Allow: /
 
