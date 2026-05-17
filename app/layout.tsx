@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider'
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://aidashtools.com'),
@@ -87,6 +88,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
