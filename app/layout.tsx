@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider'
-
+import Script from "next/script";
 export const metadata: Metadata = {
   metadataBase: new URL('https://aidashtools.com'),
   title: {
@@ -72,11 +72,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7675327870485351"
-          crossOrigin="anonymous"
-        />
+        <Script
+          src="https://stats.rabbidwombat.com/script.js"
+          data-website-id="ad664881-56d4-4cc0-88ff-30c29a517fc2"
+          strategy="afterInteractive"
+       />
       </head>
       <body>
         <ThemeProvider
